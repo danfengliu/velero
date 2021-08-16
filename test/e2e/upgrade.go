@@ -18,82 +18,27 @@ package e2e
 
 import (
 	"fmt"
-	"os/exec"
-	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-
-	veleroexec "github.com/vmware-tanzu/velero/pkg/util/exec"
 )
 
 const (
-	kibishiiNamespace = "kibishii-workload"
-	jumpPadPod        = "jump-pad"
+	upgradeNamespace = "upgrade-workload"
 )
 
-func installKibishii(ctx context.Context, namespace string, cloudPlatform string) error {
-	// We use kustomize to generate YAML for Kibishii from the checked-in yaml directories
-	kibishiiInstallCmd := exec.CommandContext(ctx, "kubectl", "apply", "-n", namespace, "-k",
-		"github.com/vmware-tanzu-experiments/distributed-data-generator/kubernetes/yaml/"+cloudPlatform)
-	_, stderr, err := veleroexec.RunCommand(kibishiiInstallCmd)
-	if err != nil {
-		return errors.Wrapf(err, "failed to install kibishii, stderr=%s", stderr)
-	}
-
-	kibishiiSetWaitCmd := exec.CommandContext(ctx, "kubectl", "rollout", "status", "statefulset.apps/kibishii-deployment",
-		"-n", namespace, "-w", "--timeout=30m")
-	_, stderr, err = veleroexec.RunCommand(kibishiiSetWaitCmd)
-	if err != nil {
-		return errors.Wrapf(err, "failed to rollout, stderr=%s", stderr)
-	}
-
-	fmt.Printf("Waiting for kibishii jump-pad pod to be ready\n")
-	jumpPadWaitCmd := exec.CommandContext(ctx, "kubectl", "wait", "--for=condition=ready", "-n", namespace, "pod/jump-pad")
-	_, stderr, err = veleroexec.RunCommand(jumpPadWaitCmd)
-	if err != nil {
-		return errors.Wrapf(err, "Failed to wait for ready status of pod %s/%s, stderr=%s", namespace, jumpPadPod, stderr)
-	}
-
-	return err
-}
-
-func generateData(ctx context.Context, namespace string, levels int, filesPerLevel int, dirsPerLevel int, fileSize int,
-	blockSize int, passNum int, expectedNodes int) error {
-	kibishiiGenerateCmd := exec.CommandContext(ctx, "kubectl", "exec", "-n", namespace, "jump-pad", "--",
-		"/usr/local/bin/generate.sh", strconv.Itoa(levels), strconv.Itoa(filesPerLevel), strconv.Itoa(dirsPerLevel), strconv.Itoa(fileSize),
-		strconv.Itoa(blockSize), strconv.Itoa(passNum), strconv.Itoa(expectedNodes))
-	fmt.Printf("kibishiiGenerateCmd cmd =%v\n", kibishiiGenerateCmd)
-
-	_, stderr, err := veleroexec.RunCommand(kibishiiGenerateCmd)
-	if err != nil {
-		return errors.Wrapf(err, "failed to generate, stderr=%s", stderr)
-	}
-
-	return nil
-}
-
-func verifyData(ctx context.Context, namespace string, levels int, filesPerLevel int, dirsPerLevel int, fileSize int,
-	blockSize int, passNum int, expectedNodes int) error {
-	kibishiiVerifyCmd := exec.CommandContext(ctx, "kubectl", "exec", "-n", namespace, "jump-pad", "--",
-		"/usr/local/bin/verify.sh", strconv.Itoa(levels), strconv.Itoa(filesPerLevel), strconv.Itoa(dirsPerLevel), strconv.Itoa(fileSize),
-		strconv.Itoa(blockSize), strconv.Itoa(passNum), strconv.Itoa(expectedNodes))
-	fmt.Printf("kibishiiVerifyCmd cmd =%v\n", kibishiiVerifyCmd)
-
-	_, stderr, err := veleroexec.RunCommand(kibishiiVerifyCmd)
-	if err != nil {
-		return errors.Wrapf(err, "failed to verify, stderr=%s", stderr)
-	}
-	return nil
-}
-
 // runKibishiiTests runs kibishii tests on the provider.
-func runKibishiiTests(client testClient, providerName, veleroCLI, veleroNamespace, backupName, restoreName, backupLocation string,
-	useVolumeSnapshots bool, registryCredentialFile string) error {
+func runUpgradeTests(client testClient, providerName, veleroCLI, veleroNamespace, backupName, restoreName, backupLocation string,
+	useVolumeSnapshots bool, registryCredentialFile string, installParams *veleroInstallationParams) error {
 	oneHourTimeout, _ := context.WithTimeout(context.Background(), time.Minute*60)
 	serviceAccountName := "default"
-	if err := createNamespace(oneHourTimeout, client, kibishiiNamespace); err != nil {
+
+	if err := veleroInstallNew(installParams); err != nil {
+		return errors.Wrapf(err, "Failed to install velero from image %s", installParams.veleroImage)
+	}
+	fmt.Println("======createNamespace======")
+	if err := createNamespace(oneHourTimeout, client, upgradeNamespace); err != nil {
 		return errors.Wrapf(err, "Failed to create namespace %s to install Kibishii workload", kibishiiNamespace)
 	}
 	defer func() {
@@ -101,15 +46,15 @@ func runKibishiiTests(client testClient, providerName, veleroCLI, veleroNamespac
 			fmt.Println(errors.Wrapf(err, "failed to delete the namespace %q", kibishiiNamespace))
 		}
 	}()
-
+	fmt.Println("======waitUntilServiceAccountCreated======")
 	// wait until the service account is created before patch the image pull secret
 	if err := waitUntilServiceAccountCreated(oneHourTimeout, client, kibishiiNamespace, serviceAccountName, 10*time.Minute); err != nil {
 		return errors.Wrapf(err, "failed to wait the service account %q created under the namespace %q", serviceAccountName, kibishiiNamespace)
 	}
 	// add the image pull secret to avoid the image pull limit issue of Docker Hub
-	//if err := patchServiceAccountWithImagePullSecret(oneHourTimeout, client, kibishiiNamespace, serviceAccountName, registryCredentialFile); err != nil {
-	//	return errors.Wrapf(err, "failed to patch the service account %q under the namespace %q", serviceAccountName, kibishiiNamespace)
-	//}
+	if err := patchServiceAccountWithImagePullSecret(oneHourTimeout, client, kibishiiNamespace, serviceAccountName, registryCredentialFile); err != nil {
+		return errors.Wrapf(err, "failed to patch the service account %q under the namespace %q", serviceAccountName, kibishiiNamespace)
+	}
 
 	if err := installKibishii(oneHourTimeout, kibishiiNamespace, providerName); err != nil {
 		return errors.Wrap(err, "Failed to install Kibishii workload")
@@ -164,8 +109,4 @@ func runKibishiiTests(client testClient, providerName, veleroCLI, veleroNamespac
 
 	fmt.Printf("kibishii test completed successfully\n")
 	return nil
-}
-
-func waitForKibishiiPods(ctx context.Context, client testClient, kibishiiNamespace string) error {
-	return waitForPods(ctx, client, kibishiiNamespace, []string{"jump-pad", "etcd0", "etcd1", "etcd2", "kibishii-deployment-0", "kibishii-deployment-1"})
 }

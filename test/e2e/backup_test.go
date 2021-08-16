@@ -45,7 +45,22 @@ func backup_restore_with_restic() {
 func backup_restore_test(useVolumeSnapshots bool) {
 	var (
 		backupName, restoreName string
+		installParams           veleroInstallationParams
 	)
+	installParams.veleroCLI = veleroCLI
+	installParams.veleroImage = veleroImage
+	installParams.veleroNamespace = veleroNamespace
+	installParams.cloudProvider = cloudProvider
+	installParams.objectStoreProvider = objectStoreProvider
+	installParams.useVolumeSnapshots = useVolumeSnapshots
+	installParams.cloudCredentialsFile = cloudCredentialsFile
+	installParams.bslBucket = bslBucket
+	installParams.bslPrefix = bslPrefix
+	installParams.bslConfig = bslConfig
+	installParams.vslConfig = vslConfig
+	installParams.crdsVersion = crdsVersion
+	installParams.features = ""
+	installParams.registryCredentialFile = registryCredentialFile
 
 	client, err := newTestClient()
 	Expect(err).To(Succeed(), "Failed to instantiate cluster client for backup tests")
@@ -59,29 +74,49 @@ func backup_restore_test(useVolumeSnapshots bool) {
 		uuidgen, err = uuid.NewRandom()
 		Expect(err).To(Succeed())
 		if installVelero {
-			Expect(veleroInstall(context.Background(), veleroImage, veleroNamespace, cloudProvider, objectStoreProvider, useVolumeSnapshots,
-				cloudCredentialsFile, bslBucket, bslPrefix, bslConfig, vslConfig, "")).To(Succeed())
-		}
-	})
-
-	AfterEach(func() {
-		if installVelero {
 			err = veleroUninstall(context.Background(), client.kubebuilder, installVelero, veleroNamespace)
 			Expect(err).To(Succeed())
 		}
 	})
 
+	AfterEach(func() {
+		// if installVelero {
+		// 	err = veleroUninstall(context.Background(), client.kubebuilder, installVelero, veleroNamespace)
+		// 	Expect(err).To(Succeed())
+		// }
+	})
+
 	When("kibishii is the sample workload", func() {
-		It("should be successfully backed up and restored to the default BackupStorageLocation", func() {
+		XIt("should be successfully backed up and restored to the default BackupStorageLocation", func() {
+			backupName = "backup-" + uuidgen.String()
+			restoreName = "restore-" + uuidgen.String()
+			installParams.veleroImage = veleroImage
+			if installVelero {
+				Expect(veleroInstall(context.Background(), veleroImage, veleroNamespace, cloudProvider, objectStoreProvider, useVolumeSnapshots,
+					cloudCredentialsFile, bslBucket, bslPrefix, bslConfig, vslConfig, crdsVersion, "", registryCredentialFile)).To(Succeed())
+			}
+			// Even though we are using Velero's CloudProvider plugin for object storage, the kubernetes cluster is running on
+			// KinD. So use the kind installation for Kibishii.
+			Expect(runKibishiiTests(client, cloudProvider, veleroCLI, veleroNamespace, backupName, restoreName, "", useVolumeSnapshots, registryCredentialFile)).To(Succeed(),
+				"Failed to successfully backup and restore Kibishii namespace")
+		})
+
+		FIt("should be successfully backed up, upgraded and restored to the default BackupStorageLocation", func() {
 			backupName = "backup-" + uuidgen.String()
 			restoreName = "restore-" + uuidgen.String()
 			// Even though we are using Velero's CloudProvider plugin for object storage, the kubernetes cluster is running on
 			// KinD. So use the kind installation for Kibishii.
-			Expect(runKibishiiTests(client, cloudProvider, veleroCLI, veleroNamespace, backupName, restoreName, "", useVolumeSnapshots)).To(Succeed(),
+			installParams.veleroImage = "harbor-repo.vmware.com/harbor-ci/velero/velero:v1.6.3"
+			if installVelero {
+				Expect(veleroInstallNew(&installParams)).To(Succeed())
+			}
+			fmt.Println("---------runUpgradeTests------------")
+			installParams.veleroImage = veleroImage
+			Expect(runUpgradeTests(client, cloudProvider, veleroCLI, veleroNamespace, backupName, restoreName, "", useVolumeSnapshots, registryCredentialFile, &installParams)).To(Succeed(),
 				"Failed to successfully backup and restore Kibishii namespace")
 		})
 
-		It("should successfully back up and restore to an additional BackupStorageLocation with unique credentials", func() {
+		XIt("should successfully back up and restore to an additional BackupStorageLocation with unique credentials", func() {
 			if additionalBSLProvider == "" {
 				Skip("no additional BSL provider given, not running multiple BackupStorageLocation with unique credentials tests")
 			}
@@ -95,6 +130,12 @@ func backup_restore_test(useVolumeSnapshots bool) {
 			}
 
 			Expect(veleroAddPluginsForProvider(context.TODO(), veleroCLI, veleroNamespace, additionalBSLProvider)).To(Succeed())
+
+			installParams.veleroImage = veleroImage
+			if installVelero {
+				Expect(veleroInstall(context.Background(), veleroImage, veleroNamespace, cloudProvider, objectStoreProvider, useVolumeSnapshots,
+					cloudCredentialsFile, bslBucket, bslPrefix, bslConfig, vslConfig, crdsVersion, "", registryCredentialFile)).To(Succeed())
+			}
 
 			// Create Secret for additional BSL
 			secretName := fmt.Sprintf("bsl-credentials-%s", uuidgen)
@@ -122,10 +163,16 @@ func backup_restore_test(useVolumeSnapshots bool) {
 			bsls := []string{"default", additionalBsl}
 
 			for _, bsl := range bsls {
-				backupName = fmt.Sprintf("backup-%s-%s", bsl, uuidgen)
-				restoreName = fmt.Sprintf("restore-%s-%s", bsl, uuidgen)
+				backupName = fmt.Sprintf("backup-%s", bsl)
+				restoreName = fmt.Sprintf("restore-%s", bsl)
+				// We limit the length of backup name here to avoid the issue of vsphere plugin https://github.com/vmware-tanzu/velero-plugin-for-vsphere/issues/370
+				// We can remove the logic once the issue is fixed
+				if bsl == "default" {
+					backupName = fmt.Sprintf("%s-%s", backupName, uuidgen)
+					restoreName = fmt.Sprintf("%s-%s", restoreName, uuidgen)
+				}
 
-				Expect(runKibishiiTests(client, cloudProvider, veleroCLI, veleroNamespace, backupName, restoreName, bsl, useVolumeSnapshots)).To(Succeed(),
+				Expect(runKibishiiTests(client, cloudProvider, veleroCLI, veleroNamespace, backupName, restoreName, bsl, useVolumeSnapshots, registryCredentialFile)).To(Succeed(),
 					"Failed to successfully backup and restore Kibishii namespace using BSL %s", bsl)
 			}
 		})
