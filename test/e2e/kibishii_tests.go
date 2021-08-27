@@ -36,7 +36,7 @@ const (
 func installKibishii(ctx context.Context, namespace string, cloudPlatform string) error {
 	// We use kustomize to generate YAML for Kibishii from the checked-in yaml directories
 	kibishiiInstallCmd := exec.CommandContext(ctx, "kubectl", "apply", "-n", namespace, "-k",
-		"github.com/vmware-tanzu-experiments/distributed-data-generator/kubernetes/yaml/"+cloudPlatform)
+		"github.com/danfengliu/distributed-data-generator/kubernetes/yaml/"+cloudPlatform)
 	_, stderr, err := veleroexec.RunCommand(kibishiiInstallCmd)
 	if err != nil {
 		return errors.Wrapf(err, "failed to install kibishii, stderr=%s", stderr)
