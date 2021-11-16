@@ -3,7 +3,10 @@ module github.com/vmware-tanzu/velero
 go 1.16
 
 require (
+	cloud.google.com/go/storage v1.10.0
+	github.com/Azure/azure-pipeline-go v0.2.3
 	github.com/Azure/azure-sdk-for-go v42.0.0+incompatible
+	github.com/Azure/azure-storage-blob-go v0.14.0
 	github.com/Azure/go-autorest/autorest v0.11.21
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.8
 	github.com/Azure/go-autorest/autorest/to v0.3.0
@@ -14,12 +17,12 @@ require (
 	github.com/gobwas/glob v0.2.3
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/protobuf v1.5.2
-	github.com/google/uuid v1.1.2
+	github.com/google/uuid v1.2.0
 	github.com/hashicorp/go-hclog v0.12.0
 	github.com/hashicorp/go-plugin v0.0.0-20190610192547-a1bc61569a26
 	github.com/joho/godotenv v1.3.0
 	github.com/kubernetes-csi/external-snapshotter/client/v4 v4.0.0
-	github.com/onsi/ginkgo v1.16.4
+	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.16.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
@@ -32,6 +35,7 @@ require (
 	github.com/vmware-tanzu/crash-diagnostics v0.3.7
 	golang.org/x/mod v0.4.2
 	golang.org/x/net v0.0.0-20210520170846-37e1c6afe023
+	google.golang.org/api v0.56.0
 	google.golang.org/grpc v1.40.0
 	k8s.io/api v0.22.2
 	k8s.io/apiextensions-apiserver v0.22.2

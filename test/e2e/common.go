@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -74,6 +75,83 @@ func waitForPods(ctx context.Context, client testClient, namespace string, pods 
 	})
 	if err != nil {
 		return errors.Wrapf(err, fmt.Sprintf("Failed to wait for pods in namespace %s to start running", namespace))
+	}
+	return nil
+}
+
+type ObjectsInStorage interface {
+	IsObjectsInBucket(cloudCredentialsFile, region, bslBucket, bslPrefix, bslConfig, backupObject string) (bool, error)
+	deleteObjectsInBucket(cloudCredentialsFile, region, bslBucket, bslPrefix, bslConfig, backupObject string) error
+}
+
+func objectsShouldBeInBucket(cloudProvider, cloudCredentialsFile, region, bslBucket, bslPrefix, bslConfig, backupName, subPrefix string) error {
+	exist, err := IsObjectsInBucket(cloudProvider, cloudCredentialsFile, region, bslBucket, bslPrefix, bslConfig, backupName, subPrefix)
+	if !exist {
+		return errors.Wrapf(err, "|| UNEXPECTED ||Backup object %s is not exist in object store after backup as expected", backupName)
+	}
+	fmt.Printf("|| EXPECTED || - Backup %s exsit in object storage bucket %s\n", backupName, bslBucket)
+	return nil
+}
+func objectsShouldNotBeInBucket(cloudProvider, cloudCredentialsFile, region, bslBucket, bslPrefix, bslConfig, backupName, subPrefix string, retryTimes int) error {
+	var err error
+	var exist bool
+	for i := 0; i < retryTimes; i++ {
+		exist, err = IsObjectsInBucket(cloudProvider, cloudCredentialsFile, region, bslBucket, bslPrefix, bslConfig, backupName, subPrefix)
+		if err != nil {
+			return errors.Wrapf(err, "|| UNEXPECTED || - Failed to get backup %s in object store", backupName)
+		}
+		if !exist {
+			fmt.Printf("|| EXPECTED || - Backup %s is not in object store\n", backupName)
+			return nil
+		}
+		time.Sleep(1 * time.Minute)
+	}
+	return errors.New(fmt.Sprintf("|| UNEXPECTED ||Backup object %s still exist in object store after backup deletion", backupName))
+}
+func getProvider(cloudProvider string) (ObjectsInStorage, error) {
+	var s ObjectsInStorage
+	switch cloudProvider {
+	case "aws", "vsphere":
+		aws := AWSStorage("")
+		s = &aws
+	case "gcp":
+		gcs := GCSStorage("")
+		s = &gcs
+	case "azure":
+		az := AzureStorage("")
+		s = &az
+	default:
+		return nil, errors.New(fmt.Sprintf("Cloud provider %s is not valid", cloudProvider))
+	}
+	return s, nil
+}
+func getFullPrefix(bslPrefix, subPrefix string) string {
+	if bslPrefix == "" {
+		bslPrefix = subPrefix + "/"
+	} else {
+		//subPrefix must have surfix "/", so that objects under it can be listed
+		bslPrefix = strings.Trim(bslPrefix, "/") + "/" + strings.Trim(subPrefix, "/") + "/"
+	}
+	return bslPrefix
+}
+func IsObjectsInBucket(cloudProvider, cloudCredentialsFile, region, bslBucket, bslPrefix, bslConfig, backupName, subPrefix string) (bool, error) {
+	bslPrefix = getFullPrefix(bslPrefix, subPrefix)
+	s, err := getProvider(cloudProvider)
+	if err != nil {
+		return false, errors.Wrapf(err, fmt.Sprintf("Cloud provider %s is not valid", cloudProvider))
+	}
+	return s.IsObjectsInBucket(cloudCredentialsFile, region, bslBucket, bslPrefix, bslConfig, backupName)
+}
+
+func deleteObjectsInBucket(cloudProvider, cloudCredentialsFile, region, bslBucket, bslPrefix, bslConfig, backupName, subPrefix string) error {
+	bslPrefix = getFullPrefix(bslPrefix, subPrefix)
+	s, err := getProvider(cloudProvider)
+	if err != nil {
+		return errors.Wrapf(err, fmt.Sprintf("Cloud provider %s is not valid", cloudProvider))
+	}
+	err = s.deleteObjectsInBucket(cloudCredentialsFile, region, bslBucket, bslPrefix, bslConfig, backupName)
+	if err != nil {
+		return errors.Wrapf(err, fmt.Sprintf("Fail to delete %s", bslPrefix))
 	}
 	return nil
 }

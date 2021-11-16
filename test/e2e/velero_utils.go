@@ -140,7 +140,7 @@ func checkBackupPhase(ctx context.Context, veleroCLI string, veleroNamespace str
 	checkCMD := exec.CommandContext(ctx, veleroCLI, "--namespace", veleroNamespace, "backup", "get", "-o", "json",
 		backupName)
 
-	fmt.Printf("get backup cmd =%v\n", checkCMD)
+	fmt.Printf("Get backup phase cmd =%v\n", checkCMD)
 	stdoutPipe, err := checkCMD.StdoutPipe()
 	if err != nil {
 		return err
@@ -556,4 +556,36 @@ func getVeleroCliTarball(cliTarballUrl string) (*os.File, error) {
 	}
 
 	return tmpfile, nil
+}
+
+func deleteBackupResource(ctx context.Context, veleroCLI string, backupName string) error {
+	args := []string{"backup", "delete", backupName, "--confirm"}
+
+	cmd := exec.CommandContext(ctx, veleroCLI, args...)
+	fmt.Println("Delete backup Command:" + cmd.String())
+	stdout, stderr, err := veleroexec.RunCommand(cmd)
+	if err != nil {
+		return errors.Wrapf(err, "Fail to get delete backup, stdout=%s, stderr=%s", stdout, stderr)
+	}
+
+	output := strings.Replace(stdout, "\n", " ", -1)
+	fmt.Println("Backup delete command output:" + output)
+
+	args = []string{"backup", "get", backupName}
+
+	retryTimes := 5
+	for i := 1; i < retryTimes+1; i++ {
+		cmd = exec.CommandContext(ctx, veleroCLI, args...)
+		fmt.Printf("Try %d times to delete backup %s \n", i, cmd.String())
+		stdout, stderr, err = veleroexec.RunCommand(cmd)
+		if err != nil {
+			if strings.Contains(stderr, "not found") {
+				fmt.Printf("|| EXPECTED || - Backup %s was deleted successfully according to message %s\n", backupName, stderr)
+				return nil
+			}
+			return errors.Wrapf(err, "Fail to get delete backup, stdout=%s, stderr=%s", stdout, stderr)
+		}
+		time.Sleep(1 * time.Minute)
+	}
+	return nil
 }

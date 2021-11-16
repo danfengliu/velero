@@ -25,6 +25,10 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+const (
+	backupObjectsPrefix = "backups"
+)
+
 var (
 	veleroCLI, veleroImage, veleroVersion, cloudCredentialsFile, bslConfig, bslBucket, bslPrefix, vslConfig, cloudProvider, objectStoreProvider, veleroNamespace, crdsVersion string
 	additionalBSLProvider, additionalBSLBucket, additionalBSLPrefix, additionalBSLConfig, additionalBSLCredentials, registryCredentialFile, resticHelperImage                 string

@@ -95,7 +95,7 @@ func installKibishii(ctx context.Context, namespace string, cloudPlatform string
 		"github.com/vmware-tanzu-experiments/distributed-data-generator/kubernetes/yaml/"+cloudPlatform)
 	_, stderr, err := veleroexec.RunCommand(kibishiiInstallCmd)
 	if err != nil {
-		return errors.Wrapf(err, "failed to install kibishii, stderr=%s", stderr)
+		return errors.Wrapf(err, "failed to install kibishii, stderr=%s, cmd=%s", stderr, kibishiiInstallCmd)
 	}
 
 	kibishiiSetWaitCmd := exec.CommandContext(ctx, "kubectl", "rollout", "status", "statefulset.apps/kibishii-deployment",
