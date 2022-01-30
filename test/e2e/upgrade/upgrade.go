@@ -86,10 +86,10 @@ func BackupUpgradeRestoreTest(useVolumeSnapshots bool) {
 	})
 
 	AfterEach(func() {
-		if VeleroCfg.InstallVelero {
-			err = VeleroUninstall(context.Background(), VeleroCfg.VeleroCLI, VeleroCfg.VeleroNamespace)
-			Expect(err).To(Succeed())
-		}
+		// if VeleroCfg.InstallVelero {
+		// 	err = VeleroUninstall(context.Background(), VeleroCfg.VeleroCLI, VeleroCfg.VeleroNamespace)
+		// 	Expect(err).To(Succeed())
+		// }
 	})
 
 	When("kibishii is the sample workload", func() {
