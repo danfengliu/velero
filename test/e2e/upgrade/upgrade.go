@@ -27,8 +27,10 @@ import (
 	. "github.com/onsi/gomega"
 
 	. "github.com/vmware-tanzu/velero/test/e2e"
+	util "github.com/vmware-tanzu/velero/test/e2e/util/csi"
 	. "github.com/vmware-tanzu/velero/test/e2e/util/k8s"
 	. "github.com/vmware-tanzu/velero/test/e2e/util/kibishii"
+	. "github.com/vmware-tanzu/velero/test/e2e/util/providers"
 	. "github.com/vmware-tanzu/velero/test/e2e/util/velero"
 )
 
@@ -166,11 +168,27 @@ func BackupUpgradeRestoreTest(useVolumeSnapshots bool, upgradeFromVelero Upgrade
 				})
 			})
 
-			if useVolumeSnapshots && VeleroCfg.CloudProvider == "vsphere" {
-				// TODO - remove after upload progress monitoring is implemented
-				By("Waiting for vSphere uploads to complete", func() {
-					Expect(WaitForVSphereUploadCompletion(oneHourTimeout, time.Hour,
-						upgradeNamespace)).To(Succeed())
+			if useVolumeSnapshots {
+				if VeleroCfg.CloudProvider == "vsphere" {
+					// TODO - remove after upload progress monitoring is implemented
+					By("Waiting for vSphere uploads to complete", func() {
+						Expect(WaitForVSphereUploadCompletion(oneHourTimeout, time.Hour,
+							upgradeNamespace)).To(Succeed())
+					})
+				} else if VeleroCfg.CloudProvider == "azure" && strings.EqualFold(VeleroCfg.Features, "EnableCSI") {
+					By("CSI VolumeSnapshotContent CR should be created", func() {
+						Expect(util.CheckVolumeSnapshotCR(client, KibishiiPodNameList, upgradeNamespace, backupName)).NotTo(HaveOccurred(), "Fail to get Azure CSI snapshot content")
+					})
+				}
+				var snapshotCheckPoint SnapshotCheckPoint
+				snapshotCheckPoint.NamespaceBackedUp = upgradeNamespace
+				By("Snapshot should be created in cloud object store", func() {
+					snapshotCheckPoint, err := GetSnapshotCheckPoint(client, 2, VeleroCfg.Features,
+						upgradeNamespace, backupName, KibishiiPodNameList)
+					Expect(err).NotTo(HaveOccurred(), "Fail to get snapshot checkpoint")
+					Expect(WaitUntilSnapshotsExistInCloud(VeleroCfg.CloudProvider,
+						VeleroCfg.CloudCredentialsFile, VeleroCfg.BSLBucket,
+						VeleroCfg.BSLConfig, backupName, snapshotCheckPoint)).To(Succeed())
 				})
 			}
 

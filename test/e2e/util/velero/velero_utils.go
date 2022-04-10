@@ -40,7 +40,10 @@ import (
 	cliinstall "github.com/vmware-tanzu/velero/pkg/cmd/cli/install"
 	"github.com/vmware-tanzu/velero/pkg/cmd/util/flag"
 	veleroexec "github.com/vmware-tanzu/velero/pkg/util/exec"
+	. "github.com/vmware-tanzu/velero/test/e2e"
 	common "github.com/vmware-tanzu/velero/test/e2e/util/common"
+	util "github.com/vmware-tanzu/velero/test/e2e/util/csi"
+	. "github.com/vmware-tanzu/velero/test/e2e/util/k8s"
 )
 
 const BackupObjectsPrefix = "backups"
@@ -796,4 +799,27 @@ func GetResticRepositories(ctx context.Context, veleroNamespace, targetNamespace
 	}
 
 	return common.GetListBy2Pipes(ctx, *CmdLine1, *CmdLine2, *CmdLine3)
+}
+
+func GetSnapshotCheckPoint(client TestClient, expectCount int, veleroFeatures, namespaceBackedUp, backupName string, kibishiiPodNameList []string) (SnapshotCheckPoint, error) {
+	var snapshotCheckPoint SnapshotCheckPoint
+	snapshotCheckPoint.ExpectCount = expectCount
+	snapshotCheckPoint.NamespaceBackedUp = namespaceBackedUp
+	if strings.EqualFold(veleroFeatures, "EnableCSI") {
+		snapshotCheckPoint.EnableCSI = true
+		if err := util.CheckVolumeSnapshotCR(client, kibishiiPodNameList, namespaceBackedUp, backupName); err != nil {
+			return snapshotCheckPoint, errors.Wrapf(err, "Fail to get Azure CSI snapshot content")
+		}
+		for _, podName := range kibishiiPodNameList {
+			snapshotContentName, err := util.GetVolumeSnapshotContentNameByPod(client, podName, namespaceBackedUp, backupName)
+			if err != nil {
+				return snapshotCheckPoint, errors.Wrap(err, "Fail get VolumeSnapshotContent name by pod")
+			}
+			snapshotCheckPoint.SnapshotIDList = append(snapshotCheckPoint.SnapshotIDList, strings.Replace(snapshotContentName, "snapcontent", "snapshot", 1))
+		}
+		if len(snapshotCheckPoint.SnapshotIDList) != expectCount {
+			return snapshotCheckPoint, errors.New(fmt.Sprintf("Length of SnapshotIDList is not as expected %d", expectCount))
+		}
+	}
+	return snapshotCheckPoint, nil
 }
