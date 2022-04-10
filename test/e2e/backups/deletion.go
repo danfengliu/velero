@@ -25,6 +25,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
+	waitutil "k8s.io/apimachinery/pkg/util/wait"
 
 	. "github.com/vmware-tanzu/velero/test/e2e"
 	. "github.com/vmware-tanzu/velero/test/e2e/util/k8s"
@@ -50,8 +51,9 @@ func backup_deletion_test(useVolumeSnapshots bool) {
 	)
 
 	client, err := NewTestClient()
-	Expect(err).To(Succeed(), "Failed to instantiate cluster client for backup deletion tests")
-
+	if err != nil {
+		println(err.Error())
+	}
 	BeforeEach(func() {
 		if useVolumeSnapshots && VeleroCfg.CloudProvider == "kind" {
 			Skip("Volume snapshots not supported on kind")
@@ -98,11 +100,13 @@ func runBackupDeletionTests(client TestClient, veleroCfg VerleroConfig, backupNa
 	if err := CreateNamespace(oneHourTimeout, client, deletionTest); err != nil {
 		return errors.Wrapf(err, "Failed to create namespace %s to install Kibishii workload", deletionTest)
 	}
-	defer func() {
-		if err := DeleteNamespace(context.Background(), client, deletionTest, true); err != nil {
-			fmt.Println(errors.Wrapf(err, "failed to delete the namespace %q", deletionTest))
-		}
-	}()
+	if !VeleroCfg.Debug {
+		defer func() {
+			if err := DeleteNamespace(context.Background(), client, deletionTest, true); err != nil {
+				fmt.Println(errors.Wrapf(err, "failed to delete the namespace %q", deletionTest))
+			}
+		}()
+	}
 
 	if err := KibishiiPrepareBeforeBackup(oneHourTimeout, client, providerName, deletionTest,
 		registryCredentialFile, veleroFeatures, kibishiiDirectory, useVolumeSnapshots); err != nil {
@@ -131,13 +135,18 @@ func runBackupDeletionTests(client TestClient, veleroCfg VerleroConfig, backupNa
 	if err != nil {
 		return err
 	}
+	var snapshotCheckPoint SnapshotCheckPoint
 	if useVolumeSnapshots {
-		var snapshotCheckPoint SnapshotCheckPoint
-		snapshotCheckPoint.ExpectCount = 2
-		snapshotCheckPoint.NamespaceBackedUp = deletionTest
-		err = SnapshotsShouldBeCreatedInCloud(VeleroCfg.CloudProvider, VeleroCfg.CloudCredentialsFile, VeleroCfg.BSLBucket, bslConfig, backupName, snapshotCheckPoint)
+		snapshotCheckPoint, err = GetSnapshotCheckPoint(client, 2, VeleroCfg.Features, deletionTest, backupName, KibishiiPodNameList)
+		Expect(err).NotTo(HaveOccurred(), "Fail to get Azure CSI snapshot checkpoint")
 		if err != nil {
-			return err
+			return errors.Wrap(err, "exceed waiting for snapshot created in cloud")
+		}
+		err = WaitUntilSnapshotsExistInCloud(VeleroCfg.CloudProvider,
+			VeleroCfg.CloudCredentialsFile, VeleroCfg.BSLBucket, bslConfig,
+			backupName, snapshotCheckPoint)
+		if err != nil {
+			return errors.Wrap(err, "exceed waiting for snapshot created in cloud")
 		}
 	}
 	err = DeleteBackupResource(context.Background(), veleroCLI, backupName)
@@ -150,9 +159,18 @@ func runBackupDeletionTests(client TestClient, veleroCfg VerleroConfig, backupNa
 		return err
 	}
 	if useVolumeSnapshots {
-		err = SnapshotsShouldNotExistInCloud(VeleroCfg.CloudProvider, VeleroCfg.CloudCredentialsFile, VeleroCfg.BSLBucket, bslConfig, backupName)
+		err = waitutil.PollImmediate(30*time.Second, 3*time.Minute,
+			func() (bool, error) {
+				err := SnapshotsShouldNotExistInCloud(VeleroCfg.CloudProvider,
+					VeleroCfg.CloudCredentialsFile, VeleroCfg.BSLBucket,
+					bslConfig, backupName, snapshotCheckPoint)
+				if err == nil {
+					return true, nil
+				}
+				return false, err
+			})
 		if err != nil {
-			return err
+			return errors.Wrap(err, "exceed waiting for snapshot created in cloud")
 		}
 	}
 

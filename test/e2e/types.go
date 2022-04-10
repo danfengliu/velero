@@ -58,4 +58,5 @@ type SnapshotCheckPoint struct {
 	SnapshotIDList    []string
 	ExpectCount       int
 	PodName           string
+	EnableCSI         bool
 }
