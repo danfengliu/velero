@@ -77,6 +77,7 @@ func TestFunc(test VeleroBackupRestoreTest) func() {
 		if err != nil {
 			println(err.Error())
 		}
+		//Expect(err).To(Succeed(), "Failed to instantiate cluster client for backup tests")
 		Expect(test.Init()).To(Succeed(), "Failed to instantiate test cases")
 		BeforeEach(func() {
 			flag.Parse()
@@ -105,6 +106,7 @@ func TestFuncWithMultiIt(tests []VeleroBackupRestoreTest) func() {
 		if err != nil {
 			println(err.Error())
 		}
+		//Expect(err).To(Succeed(), "Failed to instantiate cluster client for backup tests")
 		for k := range tests {
 			Expect(tests[k].Init()).To(Succeed(), fmt.Sprintf("Failed to instantiate test %s case", tests[k].GetTestMsg().Desc))
 		}
