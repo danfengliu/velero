@@ -84,7 +84,7 @@ ADDITIONAL_BSL_PREFIX ?=
 ADDITIONAL_BSL_CONFIG ?=
 
 FEATURES ?=
-DEBUG_E2E_TEST ?= false
+DEBUG_E2E_TEST ?= true
 
 .PHONY:ginkgo
 ginkgo: # Make sure ginkgo is in $GOPATH/bin

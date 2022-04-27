@@ -99,6 +99,7 @@ var _ = Describe("[PrivilegesMgmt][SSR] Velero test on ssr object when controlle
 var _ = Describe("[Backups][BackupsSync] Backups in object storage are synced to a new Velero and deleted backups in object storage are synced to be deleted in Velero", BackupsSyncTest)
 var _ = Describe("[BSL][Deletion][Snapshot] Local backups will be deleted once the corresponding backup storage location is deleted", BslDeletionWithSnapshots)
 var _ = Describe("[BSL][Deletion][Restic] Local backups and restic repos will be deleted once the corresponding backup storage location is deleted", BslDeletionWithRestic)
+var _ = Describe("[Backups][TTL] Local backups and restic repos will be deleted once the corresponding backup storage location is deleted", TTLTest)
 
 func TestE2e(t *testing.T) {
 	// Skip running E2E tests when running only "short" tests because:

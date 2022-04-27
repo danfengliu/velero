@@ -246,19 +246,18 @@ func checkRestorePhase(ctx context.Context, veleroCLI string, veleroNamespace st
 }
 
 // VeleroBackupNamespace uses the veleroCLI to backup a namespace.
-func VeleroBackupNamespace(ctx context.Context, veleroCLI, veleroNamespace, backupName, namespace, backupLocation string,
-	useVolumeSnapshots bool, selector string) error {
+func VeleroBackupNamespace(ctx context.Context, veleroCLI, veleroNamespace string, backupCfg BackupConfig) error {
 	args := []string{
 		"--namespace", veleroNamespace,
-		"create", "backup", backupName,
-		"--include-namespaces", namespace,
+		"create", "backup", backupCfg.BackupName,
+		"--include-namespaces", backupCfg.Namespace,
 		"--wait",
 	}
-	if selector != "" {
-		args = append(args, "--selector", selector)
+	if backupCfg.Selector != "" {
+		args = append(args, "--selector", backupCfg.Selector)
 	}
 
-	if useVolumeSnapshots {
+	if backupCfg.UseVolumeSnapshots {
 		args = append(args, "--snapshot-volumes")
 	} else {
 		args = append(args, "--default-volumes-to-restic")
@@ -268,11 +267,13 @@ func VeleroBackupNamespace(ctx context.Context, veleroCLI, veleroNamespace, back
 		// TODO This can be removed if the logic of vSphere plugin bump up to 1.3
 		args = append(args, "--snapshot-volumes=false")
 	}
-	if backupLocation != "" {
-		args = append(args, "--storage-location", backupLocation)
+	if backupCfg.BackupLocation != "" {
+		args = append(args, "--storage-location", backupCfg.BackupLocation)
 	}
-
-	return VeleroBackupExec(ctx, veleroCLI, veleroNamespace, backupName, args)
+	if backupCfg.TTL != 0 {
+		args = append(args, "--ttl", backupCfg.TTL.String())
+	}
+	return VeleroBackupExec(ctx, veleroCLI, veleroNamespace, backupCfg.BackupName, args)
 }
 
 // VeleroBackupExcludeNamespaces uses the veleroCLI to backup a namespace.

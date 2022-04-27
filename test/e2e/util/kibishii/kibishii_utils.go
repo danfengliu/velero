@@ -71,9 +71,13 @@ func RunKibishiiTests(client TestClient, veleroCfg VerleroConfig, backupName, re
 		kibishiiDirectory, useVolumeSnapshots); err != nil {
 		return errors.Wrapf(err, "Failed to install and prepare data for kibishii %s", kibishiiNamespace)
 	}
-
-	if err := VeleroBackupNamespace(oneHourTimeout, veleroCLI, veleroNamespace, backupName,
-		kibishiiNamespace, backupLocation, useVolumeSnapshots, ""); err != nil {
+	var BackupCfg BackupConfig
+	BackupCfg.BackupName = backupName
+	BackupCfg.Namespace = kibishiiNamespace
+	BackupCfg.BackupLocation = backupLocation
+	BackupCfg.UseVolumeSnapshots = useVolumeSnapshots
+	BackupCfg.Selector = ""
+	if err := VeleroBackupNamespace(oneHourTimeout, veleroCLI, veleroNamespace, BackupCfg); err != nil {
 		RunDebug(context.Background(), veleroCLI, veleroNamespace, backupName, "")
 		return errors.Wrapf(err, "Failed to backup kibishii namespace %s", kibishiiNamespace)
 	}

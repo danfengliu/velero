@@ -17,6 +17,8 @@ limitations under the License.
 package e2e
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -53,6 +55,14 @@ type VerleroConfig struct {
 	Debug                    bool
 }
 
+type BackupConfig struct {
+	BackupName         string
+	Namespace          string
+	BackupLocation     string
+	UseVolumeSnapshots bool
+	Selector           string
+	TTL                time.Duration
+}
 type SnapshotCheckPoint struct {
 	NamespaceBackedUp string
 	SnapshotIDList    []string
