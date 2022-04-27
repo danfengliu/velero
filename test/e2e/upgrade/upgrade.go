@@ -159,9 +159,14 @@ func BackupUpgradeRestoreTest(useVolumeSnapshots bool, upgradeFromVelero Upgrade
 			})
 
 			By(fmt.Sprintf("Backup namespace %s", upgradeNamespace), func() {
+				var BackupCfg BackupConfig
+				BackupCfg.BackupName = backupName
+				BackupCfg.Namespace = upgradeNamespace
+				BackupCfg.BackupLocation = ""
+				BackupCfg.UseVolumeSnapshots = useVolumeSnapshots
+				BackupCfg.Selector = ""
 				Expect(VeleroBackupNamespace(oneHourTimeout, tmpCfg.UpgradeFromVeleroCLI,
-					tmpCfg.VeleroNamespace, backupName, upgradeNamespace, "",
-					useVolumeSnapshots, "")).ShouldNot(HaveOccurred(), func() string {
+					tmpCfg.VeleroNamespace, BackupCfg)).ShouldNot(HaveOccurred(), func() string {
 					err = VeleroBackupLogs(context.Background(), tmpCfg.UpgradeFromVeleroCLI,
 						tmpCfg.VeleroNamespace, backupName)
 					return "Get backup logs"
