@@ -1,5 +1,5 @@
 /*
-Copyright the Velero contributors.
+Copyright The Velero Contributors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -323,6 +323,19 @@ func (c *podVolumeRestoreController) processRestore(req *velerov1api.PodVolumeRe
 	return nil
 }
 
+func singlePathMatch(path string) (string, error) {
+	matches, err := filepath.Glob(path)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	if len(matches) != 1 {
+		return "", errors.Errorf("expected one matching path, got %d", len(matches))
+	}
+
+	return matches[0], nil
+}
+
 func (c *podVolumeRestoreController) restorePodVolume(req *velerov1api.PodVolumeRestore, volumeDir string, log logrus.FieldLogger) error {
 	// Get the full path of the new volume's directory as mounted in the daemonset pod, which
 	// will look like: /host_pods/<new-pod-uid>/volumes/<volume-plugin-name>/<volume-dir>
@@ -371,6 +384,14 @@ func (c *podVolumeRestoreController) restorePodVolume(req *velerov1api.PodVolume
 		return c.failRestore(req, errors.Wrap(err, "error setting restic cmd env").Error(), log)
 	}
 	resticCmd.Env = env
+
+	// #4820: restrieve insecureSkipTLSVerify from BSL configuration for
+	// AWS plugin. If nothing is return, that means insecureSkipTLSVerify
+	// is not enable for Restic command.
+	skipTLSRet := restic.GetInsecureSkipTLSVerifyFromBSL(backupLocation, log)
+	if len(skipTLSRet) > 0 {
+		resticCmd.ExtraFlags = append(resticCmd.ExtraFlags, skipTLSRet)
+	}
 
 	var stdout, stderr string
 
