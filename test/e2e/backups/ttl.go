@@ -23,6 +23,7 @@ import (
 	"flag"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -32,7 +33,7 @@ import (
 	. "github.com/vmware-tanzu/velero/test/e2e"
 	. "github.com/vmware-tanzu/velero/test/e2e/util/k8s"
 
-	//. "github.com/vmware-tanzu/velero/test/e2e/util/providers"
+	. "github.com/vmware-tanzu/velero/test/e2e/util/providers"
 	. "github.com/vmware-tanzu/velero/test/e2e/util/velero"
 )
 
@@ -40,6 +41,7 @@ type TTL struct {
 	testNS     string
 	backupName string
 	ctx        context.Context
+	ttl        time.Duration
 }
 
 func (b *TTL) Init() {
@@ -48,6 +50,8 @@ func (b *TTL) Init() {
 	b.testNS = "backu-ttl-test-" + UUIDgen.String()
 	b.backupName = "backu-ttl-test-" + UUIDgen.String()
 	b.ctx, _ = context.WithTimeout(context.Background(), time.Duration(time.Minute*10))
+	b.ttl = time.Duration(1 * time.Minute)
+
 }
 
 func TTLTest() {
@@ -57,6 +61,8 @@ func TTLTest() {
 		println(err.Error())
 	}
 	Expect(err).To(Succeed(), "Failed to instantiate cluster client for backup tests")
+	t, _ := time.ParseDuration("1m0s")
+	fmt.Println(t.Round(time.Minute).String())
 
 	BeforeEach(func() {
 		flag.Parse()
@@ -90,7 +96,7 @@ func TTLTest() {
 			BackupCfg.BackupLocation = ""
 			BackupCfg.UseVolumeSnapshots = false
 			BackupCfg.Selector = ""
-			BackupCfg.TTL = time.Duration(1 * time.Minute)
+			BackupCfg.TTL = test.ttl
 
 			Expect(VeleroBackupNamespace(test.ctx, VeleroCfg.VeleroCLI, VeleroCfg.VeleroNamespace, BackupCfg)).To(Succeed(), func() string {
 				RunDebug(context.Background(), VeleroCfg.VeleroCLI, VeleroCfg.VeleroNamespace, test.backupName, "")
@@ -98,8 +104,33 @@ func TTLTest() {
 			})
 		})
 
-		By("Check all backups in object storage are synced to Velero", func() {
+		By("Check TTL was set correctly", func() {
+			ttl, err := GetBackupTTL(context.Background(), VeleroCfg.VeleroNamespace, test.backupName)
+			Expect(err).NotTo(HaveOccurred(), "Fail to get Azure CSI snapshot checkpoint")
+			t, _ := time.ParseDuration(strings.ReplaceAll(ttl, "'", ""))
+			fmt.Println(t.Round(time.Minute).String())
+			Expect(t).To(Equal(test.ttl))
+		})
 
+		By("Waiting period of time for removing backup ralated resources by GC", func() {
+			time.Sleep(5 * time.Minute)
+		})
+
+		By("Check if backups are deleted as a result of sync from BSL", func() {
+			Expect(WaitBackupDeleted(test.ctx, VeleroCfg.VeleroCLI, test.backupName, time.Minute*10)).To(Succeed(), fmt.Sprintf("Failed to check backup %s deleted", test.backupName))
+		})
+
+		By("Backup file from cloud object storage should be deleted", func() {
+			Expect(ObjectsShouldNotBeInBucket(VeleroCfg.CloudProvider,
+				VeleroCfg.CloudCredentialsFile, VeleroCfg.BSLBucket,
+				VeleroCfg.BSLPrefix, VeleroCfg.BSLConfig, test.backupName,
+				BackupObjectsPrefix, 5)).NotTo(HaveOccurred(), "Fail to get Azure CSI snapshot checkpoint")
+		})
+
+		By("PersistentVolume snapshots should be deleted", func() {
+		})
+
+		By("Associated Restores should be deleted", func() {
 		})
 	})
 }

@@ -825,7 +825,7 @@ func GetSnapshotCheckPoint(client TestClient, expectCount int, veleroFeatures, n
 	return snapshotCheckPoint, nil
 }
 
-func GetBackupTTL(ctx context.Context, veleroNamespace, backupName string) error {
+func GetBackupTTL(ctx context.Context, veleroNamespace, backupName string) (string, error) {
 
 	checkSnapshotCmd := exec.CommandContext(ctx, "kubectl",
 		"get", "backup", "-n", veleroNamespace, backupName, "-o=jsonpath='{.spec.ttl}'")
@@ -834,7 +834,7 @@ func GetBackupTTL(ctx context.Context, veleroNamespace, backupName string) error
 	if err != nil {
 		fmt.Print(stdout)
 		fmt.Print(stderr)
-		return errors.Wrap(err, "failed to verify")
+		return "", errors.Wrap(err, "failed to verify")
 	}
 	// lines := strings.Split(stdout, "\n")
 	// complete := true
@@ -843,5 +843,5 @@ func GetBackupTTL(ctx context.Context, veleroNamespace, backupName string) error
 
 	// }
 	// return complete, nil
-	return err
+	return stdout, err
 }
