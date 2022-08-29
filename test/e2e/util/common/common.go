@@ -6,6 +6,9 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+
+	"github.com/pkg/errors"
+	veleroexec "github.com/vmware-tanzu/velero/pkg/util/exec"
 )
 
 type OsCommandLine struct {
@@ -51,4 +54,37 @@ func GetListBy2Pipes(ctx context.Context, cmdline1, cmdline2, cmdline3 OsCommand
 	}
 
 	return ret, nil
+}
+
+func RunShellScript(script, origin_script string) error {
+	cmd, err := exec.Command("/bin/sh", script).Output()
+	fmt.Println("------5----")
+	if err != nil {
+		fmt.Println(err)
+		return errors.Wrap(err, fmt.Sprintf("Fail to run shell script %s", script))
+	}
+	output := string(cmd)
+	fmt.Printf("Script: %s, output: %s\n", script, output)
+
+	cpCmd := exec.CommandContext(context.TODO(), "cp",
+		"aws-credential", origin_script)
+	fmt.Printf("cpCmd cmd =%v\n", cpCmd)
+	stdout, stderr, err := veleroexec.RunCommand(cpCmd)
+	if err != nil {
+		fmt.Print(stdout)
+		fmt.Print(stderr)
+	}
+	return nil
+}
+
+func CatFile(file string) (string, error) {
+	cpCmd := exec.CommandContext(context.TODO(), "cat", file)
+	fmt.Printf("CatFile cmd =%v\n", cpCmd)
+	stdout, stderr, err := veleroexec.RunCommand(cpCmd)
+	fmt.Print(stdout)
+	if err != nil {
+		fmt.Print(stderr)
+		return "", err
+	}
+	return stdout, nil
 }

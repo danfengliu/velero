@@ -39,6 +39,7 @@ import (
 	"github.com/vmware-tanzu/velero/pkg/cmd/cli/install"
 	velerexec "github.com/vmware-tanzu/velero/pkg/util/exec"
 	. "github.com/vmware-tanzu/velero/test/e2e"
+	. "github.com/vmware-tanzu/velero/test/e2e/util/common"
 	. "github.com/vmware-tanzu/velero/test/e2e/util/k8s"
 )
 
@@ -47,6 +48,7 @@ type installOptions struct {
 	*install.InstallOptions
 	RegistryCredentialFile string
 	ResticHelperImage      string
+	RefreshTokenScript     string
 }
 
 func VeleroInstall(ctx context.Context, veleroCfg *VerleroConfig, useVolumeSnapshots bool) error {
@@ -97,6 +99,7 @@ func VeleroInstall(ctx context.Context, veleroCfg *VerleroConfig, useVolumeSnaps
 		InstallOptions:         veleroInstallOptions,
 		RegistryCredentialFile: veleroCfg.RegistryCredentialFile,
 		ResticHelperImage:      veleroCfg.ResticHelperImage,
+		RefreshTokenScript:     veleroCfg.RefreshTokenScript,
 	})
 	if err != nil {
 		return errors.WithMessagef(err, "Failed to install Velero in the cluster")
@@ -191,6 +194,14 @@ func installVeleroServer(ctx context.Context, cli string, options *installOption
 	}
 	if len(options.SecretFile) > 0 {
 		args = append(args, "--secret-file", options.SecretFile)
+		fmt.Println("------1----")
+		if len(options.RefreshTokenScript) > 0 {
+			fmt.Println("------2----")
+			if err := RunShellScript(options.RefreshTokenScript, options.SecretFile); err != nil {
+				fmt.Println("------3----")
+				return err
+			}
+		}
 	}
 	if len(options.VolumeSnapshotConfig.Data()) > 0 {
 		args = append(args, "--snapshot-location-config", options.VolumeSnapshotConfig.String())

@@ -63,6 +63,7 @@ type VerleroConfig struct {
 	ClientToInstallVelero    *TestClient
 	DefaultClient            *TestClient
 	StandbyClient            *TestClient
+	RefreshTokenScript       string
 }
 
 type SnapshotCheckPoint struct {

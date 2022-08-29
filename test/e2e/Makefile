@@ -95,6 +95,7 @@ DEBUG_E2E_TEST ?= false
 DEFAULT_CLUSTER ?=
 STANDBY_CLUSTER ?=
 
+REFRESH_TOKEN_SCRIPT ?=
 
 .PHONY:ginkgo
 ginkgo: # Make sure ginkgo is in $GOPATH/bin
@@ -137,7 +138,9 @@ run: ginkgo
 		-kibishii-directory=$(KIBISHII_DIRECTORY) \
 		-debug-e2e-test=$(DEBUG_E2E_TEST) \
 		-default-cluster=$(DEFAULT_CLUSTER) \
-		-standby-cluster=$(STANDBY_CLUSTER)
+		-standby-cluster=$(STANDBY_CLUSTER) \
+		-refresh-token-script=$(REFRESH_TOKEN_SCRIPT) 
+		
 
 build: ginkgo
 	mkdir -p $(OUTPUT_DIR)
