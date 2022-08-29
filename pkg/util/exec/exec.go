@@ -18,7 +18,9 @@ package exec
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
+	"os"
 	"os/exec"
 
 	"github.com/pkg/errors"
@@ -28,6 +30,25 @@ import (
 // error (if any). If there are errors reading stdout or stderr, their return
 // value(s) will contain the error as a string.
 func RunCommand(cmd *exec.Cmd) (string, string, error) {
+	out1 := os.Getenv("AWS_ACCESS_KEY_ID")
+	out2 := os.Getenv("AWS_SECRET_ACCESS_KEY")
+	out3 := os.Getenv("AWS_SESSION_TOKEN")
+	fmt.Println("out1")
+	fmt.Println(out1)
+	fmt.Println("out2")
+	fmt.Println(out2)
+	fmt.Println("out3")
+	fmt.Println(out3)
+	cmd.Env = os.Environ()
+	fmt.Println("Env1")
+	fmt.Println(cmd.Env)
+	cmd.Env = append(cmd.Env, "AWS_ACCESS_KEY="+out1)
+	cmd.Env = append(cmd.Env, "AWS_SECRET_ACCESS_KEY="+out2)
+	cmd.Env = append(cmd.Env, "AWS_SESSION_TOKEN="+out3)
+	cmd.Env = os.Environ()
+	fmt.Println("Env2")
+	fmt.Println(cmd.Env)
+
 	stdoutBuf := new(bytes.Buffer)
 	stderrBuf := new(bytes.Buffer)
 

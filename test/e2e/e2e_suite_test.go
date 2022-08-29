@@ -77,6 +77,7 @@ func init() {
 	flag.StringVar(&VeleroCfg.GCFrequency, "garbage-collection-frequency", "", "Frequency of garbage collection.")
 	flag.StringVar(&VeleroCfg.DefaultCluster, "default-cluster", "", "Default cluster context for migration test.")
 	flag.StringVar(&VeleroCfg.StandbyCluster, "standby-cluster", "", "Standby cluster context for migration test.")
+	flag.StringVar(&VeleroCfg.RefreshTokenScript, "refresh-token-script", "", "")
 }
 
 var _ = Describe("[APIGroup] Velero tests with various CRD API group versions", APIGropuVersionsTest)
@@ -128,12 +129,6 @@ var _ = Describe("[NamespaceMapping][Multiple] Backup resources should follow th
 func GetKubeconfigContext() error {
 	var err error
 	var tcDefault, tcStandby TestClient
-	tcDefault, err = NewTestClient(VeleroCfg.DefaultCluster)
-	VeleroCfg.DefaultClient = &tcDefault
-	VeleroCfg.ClientToInstallVelero = VeleroCfg.DefaultClient
-	if err != nil {
-		return err
-	}
 
 	if VeleroCfg.DefaultCluster != "" {
 		err = KubectlConfigUseContext(context.Background(), VeleroCfg.DefaultCluster)
@@ -150,7 +145,12 @@ func GetKubeconfigContext() error {
 			return errors.New("migration test needs 2 clusters to run")
 		}
 	}
-
+	tcDefault, err = NewTestClient(VeleroCfg.DefaultCluster)
+	VeleroCfg.DefaultClient = &tcDefault
+	VeleroCfg.ClientToInstallVelero = VeleroCfg.DefaultClient
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -164,6 +164,7 @@ func TestE2e(t *testing.T) {
 
 	var err error
 	if err = GetKubeconfigContext(); err != nil {
+		fmt.Println("GetKubeconfigContext")
 		fmt.Println(err)
 		t.FailNow()
 	}

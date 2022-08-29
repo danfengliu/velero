@@ -46,6 +46,7 @@ func APIExtensionsVersionsTest() {
 	)
 	resourceName := "apiextensions.k8s.io"
 	crdName := "rocknrollbands.music.example.io"
+	label := "for=backup"
 	srcCrdYaml := "testdata/enable_api_group_versions/case-a-source-v1beta1.yaml"
 	BeforeEach(func() {
 		if VeleroCfg.DefaultCluster == "" && VeleroCfg.StandbyCluster == "" {
@@ -114,15 +115,17 @@ func APIExtensionsVersionsTest() {
 			By(fmt.Sprintf("Install CRD of apiextenstions v1beta1 in cluster-A (%s)", VeleroCfg.DefaultCluster), func() {
 				Expect(installCRD(context.Background(), srcCrdYaml)).To(Succeed())
 				Expect(CRDShouldExist(context.Background(), crdName)).To(Succeed())
+				Expect(AddLabelToCRD(context.Background(), crdName, label)).To(Succeed())
 			})
 
 			By("Backup CRD", func() {
-				var BackupStorageClassCfg BackupConfig
-				BackupStorageClassCfg.BackupName = backupName
-				BackupStorageClassCfg.IncludeResources = "crd"
-				BackupStorageClassCfg.IncludeClusterResources = true
+				var BackupCfg BackupConfig
+				BackupCfg.BackupName = backupName
+				BackupCfg.IncludeResources = "crd"
+				BackupCfg.IncludeClusterResources = true
+				BackupCfg.Selector = label
 				Expect(VeleroBackupNamespace(context.Background(), VeleroCfg.VeleroCLI,
-					VeleroCfg.VeleroNamespace, BackupStorageClassCfg)).ShouldNot(HaveOccurred(), func() string {
+					VeleroCfg.VeleroNamespace, BackupCfg)).ShouldNot(HaveOccurred(), func() string {
 					VeleroBackupLogs(context.Background(), VeleroCfg.VeleroCLI,
 						VeleroCfg.VeleroNamespace, backupName)
 					return "Get backup logs"

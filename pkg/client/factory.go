@@ -17,6 +17,7 @@ limitations under the License.
 package client
 
 import (
+	"fmt"
 	"os"
 
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -123,14 +124,17 @@ func (f *factory) Client() (clientset.Interface, error) {
 }
 
 func (f *factory) KubeClient() (kubernetes.Interface, error) {
+	fmt.Println("clientConfig")
 	clientConfig, err := f.ClientConfig()
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("kubeClient")
 	kubeClient, err := kubernetes.NewForConfig(clientConfig)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
+	fmt.Println("KubeClient end")
 	return kubeClient, nil
 }
 
@@ -151,7 +155,8 @@ func (f *factory) KubebuilderClient() (kbclient.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Println("clientConfig")
+	fmt.Println(clientConfig)
 	scheme := runtime.NewScheme()
 	velerov1api.AddToScheme(scheme)
 	k8scheme.AddToScheme(scheme)
@@ -160,7 +165,10 @@ func (f *factory) KubebuilderClient() (kbclient.Client, error) {
 	kubebuilderClient, err := kbclient.New(clientConfig, kbclient.Options{
 		Scheme: scheme,
 	})
-
+	fmt.Println("kubebuilderClient - err")
+	fmt.Println(err)
+	fmt.Println("kubebuilderClient - kubebuilderClient")
+	fmt.Println(kubebuilderClient)
 	if err != nil {
 		return nil, err
 	}

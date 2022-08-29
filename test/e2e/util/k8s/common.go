@@ -178,14 +178,21 @@ func AddLabelToPod(ctx context.Context, podName, namespace, label string) error 
 	return exec.CommandContext(ctx, "kubectl", args...).Run()
 }
 
+func AddLabelToCRD(ctx context.Context, crd, label string) error {
+	args := []string{"label", "crd", crd, label}
+	fmt.Println(args)
+	return exec.CommandContext(ctx, "kubectl", args...).Run()
+}
+
 func KubectlApplyByFile(ctx context.Context, file string) error {
 	args := []string{"apply", "-f", file, "--force=true"}
 	return exec.CommandContext(ctx, "kubectl", args...).Run()
 }
 
 func KubectlConfigUseContext(ctx context.Context, kubectlContext string) error {
-	cmd := exec.CommandContext(ctx, "kubectl",
+	cmd := exec.Command("kubectl",
 		"config", "use-context", kubectlContext)
+	//cmd := exec.CommandContext(ctx, "kubectl", "config", "use-context", kubectlContext)
 	fmt.Printf("Kubectl config use-context cmd =%v\n", cmd)
 	stdout, stderr, err := veleroexec.RunCommand(cmd)
 	fmt.Print(stdout)

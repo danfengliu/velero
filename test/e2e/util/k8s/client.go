@@ -17,6 +17,8 @@ limitations under the License.
 package k8s
 
 import (
+	"fmt"
+
 	"k8s.io/client-go/kubernetes"
 	kbclient "sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -55,29 +57,30 @@ func NewTestClient(kubecontext string) (TestClient, error) {
 }
 
 func InitTestClient(kubecontext string) (TestClient, error) {
+	fmt.Println("LoadConfig")
 	config, err := client.LoadConfig()
 	if err != nil {
 		return TestClient{}, err
 	}
-
+	fmt.Println("NewFactory")
 	f := client.NewFactory("e2e", kubecontext, config)
 
+	fmt.Println("clientGo")
 	clientGo, err := f.KubeClient()
-
 	if err != nil {
 		return TestClient{}, err
 	}
-
+	fmt.Println("KubebuilderClient")
 	kb, err := f.KubebuilderClient()
 	if err != nil {
 		return TestClient{}, err
 	}
-
+	fmt.Println("dynamicClient")
 	dynamicClient, err := f.DynamicClient()
 	if err != nil {
 		return TestClient{}, err
 	}
-
+	fmt.Println("factory")
 	factory := client.NewDynamicFactory(dynamicClient)
 
 	return TestClient{
