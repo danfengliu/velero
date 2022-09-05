@@ -282,7 +282,11 @@ func BslDeletionTest(useVolumeSnapshots bool) {
 
 				By(fmt.Sprintf("Delete one of backup locations - %s", backupLocation_1), func() {
 					Expect(DeleteBslResource(context.Background(), VeleroCfg.VeleroCLI, backupLocation_1)).To(Succeed())
-					Expect(WaitForBackupsToBeDeleted(context.Background(), VeleroCfg.VeleroCLI, backupsInBSL1, 10*time.Minute)).To(Succeed())
+					Expect(WaitForBackupsToBeDeleted(context.Background(), VeleroCfg.VeleroCLI, backupsInBSL1, 10*time.Minute)).To(Succeed(), func() string {
+						RunDebug(context.Background(), VeleroCfg.VeleroCLI,
+							VeleroCfg.VeleroNamespace, "", "")
+						return "Fail to restore workload"
+					})
 				})
 
 				By("Get all backups from 2 BSLs after deleting one of them", func() {
