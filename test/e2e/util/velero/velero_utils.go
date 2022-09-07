@@ -680,7 +680,9 @@ func InstallVeleroCLI(version string) (string, error) {
 
 	cmd := exec.Command("tar", "-xvf", tempFile.Name(), "-C", tempVeleroCliDir)
 	defer os.Remove(tempFile.Name())
-
+	fmt.Println("=== extract velero CLI====")
+	fmt.Println(cmd)
+	fmt.Println(cmd.Args)
 	if _, err := cmd.Output(); err != nil {
 		return "", errors.WithMessagef(err, "failed to extract file from velero CLI tarball")
 	}

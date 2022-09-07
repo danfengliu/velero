@@ -140,7 +140,7 @@ func installKibishii(ctx context.Context, namespace string, cloudPlatform, veler
 	}
 	// We use kustomize to generate YAML for Kibishii from the checked-in yaml directories
 	kibishiiInstallCmd := exec.CommandContext(ctx, "kubectl", "apply", "-n", namespace, "-k",
-		kibishiiDirectory+cloudPlatform)
+		fmt.Sprintf("%s%s/?timeout=90s", kibishiiDirectory, cloudPlatform))
 
 	_, stderr, err := veleroexec.RunCommand(kibishiiInstallCmd)
 	fmt.Printf("Install Kibishii cmd: %s\n", kibishiiInstallCmd)
