@@ -55,7 +55,7 @@ VELERO_VERSION ?= $(VERSION)
 PLUGINS ?=
 RESTORE_HELPER_IMAGE ?=
 #Released version only
-UPGRADE_FROM_VELERO_VERSION ?= v1.7.1,v1.8.1
+UPGRADE_FROM_VELERO_VERSION ?= v1.8.1,v1.9.2
 # UPGRADE_FROM_VELERO_CLI can has the same format(a list divided by comma) with UPGRADE_FROM_VELERO_VERSION
 # Upgrade tests will be executed sequently according to the list by UPGRADE_FROM_VELERO_VERSION
 # So although length of UPGRADE_FROM_VELERO_CLI list is not equal with UPGRADE_FROM_VELERO_VERSION
@@ -88,7 +88,7 @@ ADDITIONAL_BSL_PREFIX ?=
 ADDITIONAL_BSL_CONFIG ?=
 
 FEATURES ?=
-DEBUG_E2E_TEST ?= false
+DEBUG_E2E_TEST ?= true
 
 # Parameters to run migration tests along with all other E2E tests, and both of them should
 #   be provided or left them all empty to skip migration tests with no influence to other

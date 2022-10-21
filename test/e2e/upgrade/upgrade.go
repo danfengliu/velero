@@ -91,7 +91,7 @@ func BackupUpgradeRestoreTest(useVolumeSnapshots bool, veleroCLI2Version VeleroC
 			UUIDgen, err = uuid.NewRandom()
 			Expect(err).To(Succeed())
 			oneHourTimeout, _ := context.WithTimeout(context.Background(), time.Minute*60)
-
+			fmt.Println(veleroCLI2Version.VeleroCLI)
 			if veleroCLI2Version.VeleroCLI == "" {
 				//Assume tag of velero server image is identical to velero CLI version
 				//Download velero CLI if it's empty according to velero CLI version
@@ -121,7 +121,6 @@ func BackupUpgradeRestoreTest(useVolumeSnapshots bool, veleroCLI2Version VeleroC
 				Expect(CheckVeleroVersion(context.Background(), tmpCfgForOldVeleroInstall.VeleroCLI,
 					tmpCfgForOldVeleroInstall.UpgradeFromVeleroVersion)).To(Succeed())
 			})
-
 			backupName = "backup-" + UUIDgen.String()
 			restoreName = "restore-" + UUIDgen.String()
 			tmpCfg := VeleroCfg
@@ -200,7 +199,16 @@ func BackupUpgradeRestoreTest(useVolumeSnapshots bool, veleroCLI2Version VeleroC
 				tmpCfg.GCFrequency = ""
 				tmpCfg.UseNodeAgent = !useVolumeSnapshots
 				tmpCfg.UseRestic = false
-				Expect(VeleroInstall(context.Background(), &tmpCfg, useVolumeSnapshots)).To(Succeed())
+				tmpCfg.UploaderType = "restic"
+				tmpCfg.VeleroVersion = "main"
+				fmt.Println("tmpCfg.VeleroVersion")
+				fmt.Println(tmpCfg.VeleroVersion)
+				fmt.Println("tmpCfg.UploaderType")
+				fmt.Println(tmpCfg.UploaderType)
+				output, err := VeleroUpgrade(context.Background(), tmpCfg.VeleroCLI,
+					tmpCfg.VeleroNamespace, tmpCfg.VeleroVersion, tmpCfg.UploaderType)
+				fmt.Println(output)
+				Expect(err).To(Succeed())
 				Expect(CheckVeleroVersion(context.Background(), tmpCfg.VeleroCLI,
 					tmpCfg.VeleroVersion)).To(Succeed())
 			})
