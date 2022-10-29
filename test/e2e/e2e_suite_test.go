@@ -39,7 +39,7 @@ import (
 	. "github.com/vmware-tanzu/velero/test/e2e/resource-filtering"
 
 	. "github.com/vmware-tanzu/velero/test/e2e/scale"
-	. "github.com/vmware-tanzu/velero/test/e2e/upgrade"
+	//. "github.com/vmware-tanzu/velero/test/e2e/upgrade"
 
 	. "github.com/vmware-tanzu/velero/test/e2e/migration"
 	. "github.com/vmware-tanzu/velero/test/e2e/util/k8s"
@@ -95,8 +95,8 @@ var _ = Describe("[Basic][ClusterResource] Backup/restore of cluster resources",
 var _ = Describe("[Scale] Backup/restore of 2500 namespaces", MultiNSBackupRestore)
 
 // Upgrade test by Kibishi using restic
-var _ = Describe("[Upgrade][Restic] Velero upgrade tests on cluster using the plugin provider for object storage and Restic for volume backups", BackupUpgradeRestoreWithRestic)
-var _ = Describe("[Upgrade][Snapshot] Velero upgrade tests on cluster using the plugin provider for object storage and snapshots for volume backups", BackupUpgradeRestoreWithSnapshots)
+//var _ = Describe("[Upgrade][Restic] Velero upgrade tests on cluster using the plugin provider for object storage and Restic for volume backups", BackupUpgradeRestoreWithRestic)
+//var _ = Describe("[Upgrade][Snapshot] Velero upgrade tests on cluster using the plugin provider for object storage and snapshots for volume backups", BackupUpgradeRestoreWithSnapshots)
 
 // test filter objects by namespace, type, or labels when backup or restore.
 var _ = Describe("[ResourceFiltering][ExcludeFromBackup] Resources with the label velero.io/exclude-from-backup=true are not included in backup", ExcludeFromBackupTest)
