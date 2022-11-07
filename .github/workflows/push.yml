@@ -46,10 +46,22 @@ jobs:
       with:
         version: latest
 
+    # Only try to publish the container image from the root repo; forks don't have permission to do so and will always get failures.
+    - name: Publish container image
+      if: github.repository == 'vmware-tanzu/velero'
+      run: |
+        docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }}
+        ./hack/docker-push.sh
 
     # Push image to GCR to facilitate some environments that have rate limitation to docker hub, e.g. vSphere.
     - name: Publish container image to GCP
       run: |
         source hack/ci/build_util.sh
-        echo 1 > 1.txt
-        uploader  1.txt velero-builds
+        VELERO_IMAGE=velero-main
+        VELERO_RESTORE_HELPER_IMAGE=velero-restore-helper-main
+        cp $VELERO_IMAGE $VELERO_IMAGE-'build.'$GITHUB_RUN_NUMBER
+        cp $VELERO_RESTORE_HELPER_IMAGE $VELERO_RESTORE_HELPER_IMAGE-'build.'$GITHUB_RUN_NUMBER
+        uploader  ${VELERO_IMAGE}.tar.gz velero-builds
+        uploader  ${VELERO_RESTORE_HELPER_IMAGE}.tar.gz velero-builds
+        uploader  ${VELERO_IMAGE}-'build.'$GITHUB_RUN_NUMBER.tar.gz velero-builds
+        uploader  ${VELERO_RESTORE_HELPER_IMAGE}-'build.'$GITHUB_RUN_NUMBER.tar.gz velero-builds
