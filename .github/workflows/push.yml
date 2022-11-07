@@ -50,5 +50,6 @@ jobs:
     # Push image to GCR to facilitate some environments that have rate limitation to docker hub, e.g. vSphere.
     - name: Publish container image to GCP
       run: |
+        source hack/ci/build_util.sh
         echo 1 > 1.txt
         uploader  1.txt velero-builds
