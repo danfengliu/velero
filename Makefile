@@ -209,6 +209,11 @@ endif
 	--build-arg=RESTIC_VERSION=$(RESTIC_VERSION) \
 	-f $(VELERO_DOCKERFILE) .
 	@echo "container: $(IMAGE):$(VERSION)"
+ifeq ($(BUILDX_OUTPUT_TYPE), "registry")
+	@docker pull $(IMAGE):$(VERSION)
+	@docker save $(IMAGE):$(VERSION) -o $(BIN)-$(VERSION).tar
+	@gzip $(BIN)-$(VERSION).tar
+endif
 
 SKIP_TESTS ?=
 test: build-dirs
