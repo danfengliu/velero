@@ -96,7 +96,8 @@ var _ = Describe("[Scale] Backup/restore of 2500 namespaces", MultiNSBackupResto
 
 // Upgrade test by Kibishi using restic
 var _ = Describe("[Upgrade][Restic] Velero upgrade tests on cluster using the plugin provider for object storage and Restic for volume backups", BackupUpgradeRestoreWithRestic)
-var _ = Describe("[Upgrade][Snapshot] Velero upgrade tests on cluster using the plugin provider for object storage and snapshots for volume backups", BackupUpgradeRestoreWithSnapshots)
+
+//var _ = Describe("[Upgrade][Snapshot] Velero upgrade tests on cluster using the plugin provider for object storage and snapshots for volume backups", BackupUpgradeRestoreWithSnapshots)
 
 // test filter objects by namespace, type, or labels when backup or restore.
 var _ = Describe("[ResourceFiltering][ExcludeFromBackup] Resources with the label velero.io/exclude-from-backup=true are not included in backup", ExcludeFromBackupTest)
