@@ -209,6 +209,8 @@ endif
 	--build-arg=RESTIC_VERSION=$(RESTIC_VERSION) \
 	-f $(VELERO_DOCKERFILE) .
 	@echo "container: $(IMAGE):$(VERSION)"
+	@docker images
+	@docker pull $(IMAGE):$(VERSION)
 	@docker save $(IMAGE):$(VERSION) -o $(BIN)-$(VERSION).tar
 	@gzip $(BIN)-$(VERSION).tar
 	
