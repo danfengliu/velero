@@ -56,7 +56,7 @@ jobs:
         docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }}
         BIN=velero
         RESTORE_HELPER_BIN=velero-restore-helper
-        VERSION=$(./hack/docker-push.sh)
+        VERSION=$(./hack/docker-push.sh | grep 'VERSION:' | awk -F: '{print $2}')
 
         # Push image to GCR to facilitate some environments that have rate limitation to docker hub, e.g. vSphere.
         source hack/ci/build_util.sh
