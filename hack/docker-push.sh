@@ -97,4 +97,5 @@ VERSION="$VERSION" \
 TAG_LATEST="$TAG_LATEST" \
 BUILDX_PLATFORMS="$BUILDX_PLATFORMS" \
 BUILDX_OUTPUT_TYPE="registry" \
+REGISTRY="danfengliu" \
 make all-containers
