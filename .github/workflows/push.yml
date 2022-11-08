@@ -62,9 +62,9 @@ jobs:
         source hack/ci/build_util.sh
         VELERO_IMAGE=velero-main
         VELERO_RESTORE_HELPER_IMAGE=velero-restore-helper-main
-        cp $VELERO_IMAGE $VELERO_IMAGE-'build.'$GITHUB_RUN_NUMBER
-        cp $VELERO_RESTORE_HELPER_IMAGE $VELERO_RESTORE_HELPER_IMAGE-'build.'$GITHUB_RUN_NUMBER
+        cp ${VELERO_IMAGE}.tar.gz ${VELERO_IMAGE}-'build.'${GITHUB_RUN_NUMBER}.tar.gz
+        cp ${VELERO_RESTORE_HELPER_IMAGE}.tar.gz ${VELERO_RESTORE_HELPER_IMAGE}-'build.'${GITHUB_RUN_NUMBER}.tar.gz
         uploader  ${VELERO_IMAGE}.tar.gz velero-builds
         uploader  ${VELERO_RESTORE_HELPER_IMAGE}.tar.gz velero-builds
-        uploader  ${VELERO_IMAGE}-'build.'$GITHUB_RUN_NUMBER.tar.gz velero-builds
-        uploader  ${VELERO_RESTORE_HELPER_IMAGE}-'build.'$GITHUB_RUN_NUMBER.tar.gz velero-builds
+        uploader  ${VELERO_IMAGE}-'build.'${GITHUB_RUN_NUMBER}.tar.gz velero-builds
+        uploader  ${VELERO_RESTORE_HELPER_IMAGE}-'build.'${GITHUB_RUN_NUMBER}.tar.gz velero-builds
