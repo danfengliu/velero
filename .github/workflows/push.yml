@@ -74,3 +74,8 @@ jobs:
         uploader ${VELERO_RESTORE_HELPER_IMAGE_FILE} ${GS_BUCKET}
         uploader ${VELERO_IMAGE_BACKUP_FILE} ${GS_BUCKET}
         uploader ${VELERO_RESTORE_HELPER_IMAGE_BACKUP_FILE} ${GS_BUCKET}
+    - name: Publish container image to danfengliu
+      if: github.repository == 'vmware-tanzu/velero'
+      run: |
+        docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }}
+        REGISTRY=danfengliu ./hack/docker-push.sh
