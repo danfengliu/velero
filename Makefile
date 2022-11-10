@@ -211,7 +211,9 @@ endif
 	@echo "container: $(IMAGE):$(VERSION)"
 ifeq ($(BUILDX_OUTPUT_TYPE), registry)
 ifeq ($(REGISTRY), velero)
+    @echo "save velero image tarball $(IMAGE):$(VERSION)"
 	@docker pull $(IMAGE):$(VERSION)
+	@echo "remove velero image tarball $(BIN)-$(VERSION).tar if it exist already"
 	@rm -f $(BIN)-$(VERSION).tar
 	@docker save $(IMAGE):$(VERSION) -o $(BIN)-$(VERSION).tar
 	@gzip $(BIN)-$(VERSION).tar
