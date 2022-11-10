@@ -213,6 +213,7 @@ ifeq ($(BUILDX_OUTPUT_TYPE)_$(REGISTRY), registry_velero)
 	docker pull $(IMAGE):$(VERSION)
 	rm -f $(BIN)-$(VERSION).tar
 	docker save $(IMAGE):$(VERSION) -o $(BIN)-$(VERSION).tar
+	rm -f $(BIN)-$(VERSION).tar.gz
 	gzip $(BIN)-$(VERSION).tar
 endif
 	echo "container2: $(IMAGE):$(VERSION)"
