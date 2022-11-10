@@ -210,9 +210,12 @@ endif
 	-f $(VELERO_DOCKERFILE) .
 	@echo "container: $(IMAGE):$(VERSION)"
 ifeq ($(BUILDX_OUTPUT_TYPE), registry)
+ifeq ($(REGISTRY), velero)
 	@docker pull $(IMAGE):$(VERSION)
+	@rm -f $(BIN)-$(VERSION).tar
 	@docker save $(IMAGE):$(VERSION) -o $(BIN)-$(VERSION).tar
 	@gzip $(BIN)-$(VERSION).tar
+endif
 endif
 
 SKIP_TESTS ?=
