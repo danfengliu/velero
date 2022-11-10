@@ -209,7 +209,7 @@ endif
 	--build-arg=RESTIC_VERSION=$(RESTIC_VERSION) \
 	-f $(VELERO_DOCKERFILE) .
 	echo "container1: $(IMAGE):$(VERSION)"
-ifeq ($(BUILDX_OUTPUT_TYPE)_, registry_velero)
+ifeq ($(BUILDX_OUTPUT_TYPE)_$(REGISTRY), registry_velero)
 	docker pull $(IMAGE):$(VERSION)
 	rm -f $(BIN)-$(VERSION).tar
 	docker save $(IMAGE):$(VERSION) -o $(BIN)-$(VERSION).tar
