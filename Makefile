@@ -208,18 +208,15 @@ endif
 	--build-arg=REGISTRY=$(REGISTRY) \
 	--build-arg=RESTIC_VERSION=$(RESTIC_VERSION) \
 	-f $(VELERO_DOCKERFILE) .
-	echo "container: $(IMAGE):$(VERSION)"
 ifeq ($(BUILDX_OUTPUT_TYPE), registry)
-	echo "BUILDX_OUTPUT_TYPE is registry"
 ifeq ($(REGISTRY), velero)
-	echo "save velero image tarball $(IMAGE):$(VERSION)"
 	docker pull $(IMAGE):$(VERSION)
-	echo "remove velero image tarball $(BIN)-$(VERSION).tar if it exist already"
 	rm -f $(BIN)-$(VERSION).tar
 	docker save $(IMAGE):$(VERSION) -o $(BIN)-$(VERSION).tar
 	gzip $(BIN)-$(VERSION).tar
 endif
 endif
+	echo "container: $(IMAGE):$(VERSION)"
 
 SKIP_TESTS ?=
 test: build-dirs
