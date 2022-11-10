@@ -98,4 +98,3 @@ TAG_LATEST="$TAG_LATEST" \
 BUILDX_PLATFORMS="$BUILDX_PLATFORMS" \
 BUILDX_OUTPUT_TYPE="registry" \
 make all-containers
-echo $VERSION
