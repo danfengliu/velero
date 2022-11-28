@@ -88,7 +88,7 @@ ADDITIONAL_BSL_PREFIX ?=
 ADDITIONAL_BSL_CONFIG ?=
 
 FEATURES ?=
-DEBUG_E2E_TEST ?= false
+DEBUG_E2E_TEST ?= true
 
 # Parameters to run migration tests along with all other E2E tests, and both of them should
 #   be provided or left them all empty to skip migration tests with no influence to other
