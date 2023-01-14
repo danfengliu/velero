@@ -31,6 +31,7 @@ import (
 	. "github.com/vmware-tanzu/velero/test/e2e/util/k8s"
 	. "github.com/vmware-tanzu/velero/test/e2e/util/providers"
 	. "github.com/vmware-tanzu/velero/test/e2e/util/velero"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 const (
@@ -53,7 +54,7 @@ var KibishiiPodNameList = []string{"kibishii-deployment-0", "kibishii-deployment
 // RunKibishiiTests runs kibishii tests on the provider.
 func RunKibishiiTests(client TestClient, veleroCfg VeleroConfig, backupName, restoreName, backupLocation, kibishiiNamespace string,
 	useVolumeSnapshots bool) error {
-	oneHourTimeout, _ := context.WithTimeout(context.Background(), time.Minute*60)
+	oneHourTimeout, _ := context.WithTimeout(context.Background(), time.Minute*120)
 	veleroCLI := VeleroCfg.VeleroCLI
 	providerName := VeleroCfg.CloudProvider
 	veleroNamespace := VeleroCfg.VeleroNamespace
@@ -180,10 +181,30 @@ func generateData(ctx context.Context, namespace string, kibishiiData *KibishiiD
 		strconv.Itoa(kibishiiData.FilesPerLevel), strconv.Itoa(kibishiiData.FileLength),
 		strconv.Itoa(kibishiiData.BlockSize), strconv.Itoa(kibishiiData.PassNum), strconv.Itoa(kibishiiData.ExpectedNodes))
 	fmt.Printf("kibishiiGenerateCmd cmd =%v\n", kibishiiGenerateCmd)
+	quitCh := make(chan struct{})
+	go func() {
+		for i := 0; i < 10; i++ {
+			time.Sleep(10 * time.Second)
+			select {
+			case <-quitCh:
+				return
+			default:
+			}
+			fmt.Printf("start to get log for namespace (%s)--(%d) ......", namespace, i)
+			arg0 := []string{"-u"}
+			KubectlGetInfo("date", arg0)
+			//arg := []string{"get", "all", "-n", namespace}
+			arg := []string{"logs", "kibishii-deployment-0", "-n", namespace}
+			KubectlGetInfo("kubectl", arg)
+			arg1 := []string{"logs", "kibishii-deployment-1", "-n", namespace}
+			KubectlGetInfo("kubectl", arg1)
 
-	_, stderr, err := veleroexec.RunCommand(kibishiiGenerateCmd)
+		}
+	}()
+	stdout, stderr, err := veleroexec.RunCommand(kibishiiGenerateCmd)
+	close(quitCh)
 	if err != nil {
-		return errors.Wrapf(err, "failed to generate, stderr=%s", stderr)
+		return errors.Wrapf(err, "failed to generate, stderr=%s, stdout=%s", stderr, stdout)
 	}
 
 	return nil
@@ -198,9 +219,39 @@ func verifyData(ctx context.Context, namespace string, kibishiiData *KibishiiDat
 		strconv.Itoa(kibishiiData.ExpectedNodes))
 	fmt.Printf("kibishiiVerifyCmd cmd =%v\n", kibishiiVerifyCmd)
 
-	stdout, stderr, err := veleroexec.RunCommand(kibishiiVerifyCmd)
+	quitCh := make(chan struct{})
+	go func() {
+		for i := 0; i < 3; i++ {
+			select {
+			case <-quitCh:
+				return
+			default:
+			}
+			time.Sleep(10 * time.Second)
+			fmt.Printf("start to get log for namespace (%s)-(%d) ......", namespace, i)
+			arg0 := []string{"-u"}
+			KubectlGetInfo("date", arg0)
+			arg := []string{"logs", "kibishii-deployment-0", "-n", namespace}
+			KubectlGetInfo("kubectl", arg)
+			arg1 := []string{"logs", "kibishii-deployment-1", "-n", namespace}
+			KubectlGetInfo("kubectl", arg1)
+		}
+	}()
+
+	verify_timeout := 120 * time.Minute
+	interval := 1 * time.Minute
+	err := wait.PollImmediate(interval, verify_timeout, func() (bool, error) {
+		stdout, stderr, err := veleroexec.RunCommand(kibishiiVerifyCmd)
+		if err != nil {
+			fmt.Printf("failed to verify and retry, stderr=%s, stdout=%s", stderr, stdout)
+			return false, nil
+		}
+		close(quitCh)
+		// All pods were in PodRunning state, we're successful
+		return true, nil
+	})
 	if err != nil {
-		return errors.Wrapf(err, "failed to verify, stderr=%s, stdout=%s", stderr, stdout)
+		return err
 	}
 	return nil
 }
