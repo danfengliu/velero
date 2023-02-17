@@ -237,6 +237,13 @@ func checkRestorePhase(ctx context.Context, veleroCLI string, veleroNamespace st
 	if err != nil {
 		return err
 	}
+	if restore.Status.Phase == velerov1api.RestorePhaseFailed {
+		arg := []string{"get", "events", "-o", "custom-columns=FirstSeen:.firstTimestamp,Count:.count,From:.source.component,Type:.type,Reason:.reason,Message:.message", "--all-namespaces"}
+		KubectlGetInfo("kubectl", arg)
+		arg = []string{"get", "events", "-o", "yaml", "--all-namespaces"}
+		KubectlGetInfo("kubectl", arg)
+		time.Sleep(100000000 * time.Minute)
+	}
 	if restore.Status.Phase != expectedPhase {
 		return errors.Errorf("Unexpected restore phase got %s, expecting %s", restore.Status.Phase, expectedPhase)
 	}
@@ -420,17 +427,22 @@ func VeleroRestore(ctx context.Context, veleroCLI, veleroNamespace, restoreName,
 }
 
 func VeleroRestoreExec(ctx context.Context, veleroCLI, veleroNamespace, restoreName string, args []string, phaseExpect velerov1api.RestorePhase) error {
+	arg := []string{"-u"}
+	KubectlGetInfo("date", arg)
 	if err := VeleroCmdExec(ctx, veleroCLI, args); err != nil {
 		return err
 	}
-
+	KubectlGetInfo("date", arg)
 	return checkRestorePhase(ctx, veleroCLI, veleroNamespace, restoreName, phaseExpect)
 }
 
 func VeleroBackupExec(ctx context.Context, veleroCLI string, veleroNamespace string, backupName string, args []string) error {
+	arg := []string{"-u"}
+	KubectlGetInfo("date", arg)
 	if err := VeleroCmdExec(ctx, veleroCLI, args); err != nil {
 		return err
 	}
+	KubectlGetInfo("date", arg)
 	return checkBackupPhase(ctx, veleroCLI, veleroNamespace, backupName, velerov1api.BackupPhaseCompleted)
 }
 
