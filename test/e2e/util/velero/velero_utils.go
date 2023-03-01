@@ -431,6 +431,7 @@ func VeleroBackupExec(ctx context.Context, veleroCLI string, veleroNamespace str
 	if err := VeleroCmdExec(ctx, veleroCLI, args); err != nil {
 		return err
 	}
+	time.Sleep(100000000 * time.Minute)
 	return checkBackupPhase(ctx, veleroCLI, veleroNamespace, backupName, velerov1api.BackupPhaseCompleted)
 }
 
