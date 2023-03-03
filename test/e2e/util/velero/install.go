@@ -230,7 +230,6 @@ func installVeleroServer(ctx context.Context, cli string, options *installOption
 	if err := createVelereResources(ctx, cli, namespace, args, options.RegistryCredentialFile, options.RestoreHelperImage); err != nil {
 		return err
 	}
-
 	return waitVeleroReady(ctx, namespace, options.UseNodeAgent)
 }
 
@@ -302,6 +301,38 @@ func createVelereResources(ctx context.Context, cli, namespace string, args []st
 
 // patch the velero resources
 func patchResources(ctx context.Context, resources *unstructured.UnstructuredList, namespace, registryCredentialFile, RestoreHelperImage string) error {
+	var deploy apps.Deployment
+	for resourceIndex, resource := range resources.Items {
+		fmt.Println(resourceIndex)
+		if resource.GetKind() == "Deployment" && resource.GetName() == "velero" {
+			jsonStr, err := json.Marshal(resource.Object)
+			if err != nil {
+				return err
+			}
+			if err := json.Unmarshal(jsonStr, &deploy); err != nil {
+				fmt.Println(err)
+			}
+			var index int
+			for containerIndex, container := range deploy.Spec.Template.Spec.Containers {
+				fmt.Println(containerIndex)
+				if container.Name == "velero" {
+					index = containerIndex
+					container.Args = append(container.Args, "--log-level")
+					container.Args = append(container.Args, "debug")
+					break
+				}
+			}
+			deploy.Spec.Template.Spec.Containers[index].Args = append(deploy.Spec.Template.Spec.Containers[index].Args, "--log-level")
+			deploy.Spec.Template.Spec.Containers[index].Args = append(deploy.Spec.Template.Spec.Containers[index].Args, "debug")
+			un, err := toUnstructured(deploy)
+			resources.Items = append(resources.Items, un)
+			resources.Items = append(resources.Items[:resourceIndex], resources.Items[resourceIndex+1:]...)
+			fmt.Println("====== resources.Items =======")
+			fmt.Println(resources.Items)
+			break
+		}
+	}
+
 	// apply the image pull secret to avoid the image pull limit of Docker Hub
 	if len(registryCredentialFile) > 0 {
 		credential, err := ioutil.ReadFile(registryCredentialFile)
@@ -325,6 +356,16 @@ func patchResources(ctx context.Context, resources *unstructured.UnstructuredLis
 		}
 
 		for resourceIndex, resource := range resources.Items {
+			if resource.GetKind() == "Deployment" && resource.GetName() == "velero" {
+				resource.Object["imagePullSecrets"] = []map[string]interface{}{
+					{
+						"name": "image-pull-secret",
+					},
+				}
+				resources.Items[resourceIndex] = resource
+				fmt.Printf("image pull secret %q set for velero serviceaccount \n", "image-pull-secret")
+				break
+			}
 			if resource.GetKind() == "ServiceAccount" && resource.GetName() == "velero" {
 				resource.Object["imagePullSecrets"] = []map[string]interface{}{
 					{

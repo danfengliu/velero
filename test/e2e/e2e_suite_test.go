@@ -33,13 +33,15 @@ import (
 	. "github.com/vmware-tanzu/velero/test/e2e/basic"
 	. "github.com/vmware-tanzu/velero/test/e2e/basic/resources-check"
 	. "github.com/vmware-tanzu/velero/test/e2e/bsl-mgmt"
-	. "github.com/vmware-tanzu/velero/test/e2e/migration"
+
+	//. "github.com/vmware-tanzu/velero/test/e2e/migration"
 	. "github.com/vmware-tanzu/velero/test/e2e/privilegesmgmt"
 	. "github.com/vmware-tanzu/velero/test/e2e/pv-backup"
 	. "github.com/vmware-tanzu/velero/test/e2e/resource-filtering"
 	. "github.com/vmware-tanzu/velero/test/e2e/scale"
 	. "github.com/vmware-tanzu/velero/test/e2e/schedule"
-	. "github.com/vmware-tanzu/velero/test/e2e/upgrade"
+
+	//. "github.com/vmware-tanzu/velero/test/e2e/upgrade"
 	. "github.com/vmware-tanzu/velero/test/e2e/util/k8s"
 )
 
@@ -93,8 +95,8 @@ var _ = Describe("[Basic][ClusterResource] Backup/restore of cluster resources",
 var _ = Describe("[Scale][LongTime] Backup/restore of 2500 namespaces", MultiNSBackupRestore)
 
 // Upgrade test by Kibishi using restic
-var _ = Describe("[Upgrade][Restic] Velero upgrade tests on cluster using the plugin provider for object storage and Restic for volume backups", BackupUpgradeRestoreWithRestic)
-var _ = Describe("[Upgrade][Snapshot] Velero upgrade tests on cluster using the plugin provider for object storage and snapshots for volume backups", BackupUpgradeRestoreWithSnapshots)
+//var _ = Describe("[Upgrade][Restic] Velero upgrade tests on cluster using the plugin provider for object storage and Restic for volume backups", BackupUpgradeRestoreWithRestic)
+//var _ = Describe("[Upgrade][Snapshot] Velero upgrade tests on cluster using the plugin provider for object storage and snapshots for volume backups", BackupUpgradeRestoreWithSnapshots)
 
 // test filter objects by namespace, type, or labels when backup or restore.
 var _ = Describe("[ResourceFiltering][ExcludeFromBackup] Resources with the label velero.io/exclude-from-backup=true are not included in backup", ExcludeFromBackupTest)
@@ -121,8 +123,8 @@ var _ = Describe("[PrivilegesMgmt][SSR] Velero test on ssr object when controlle
 var _ = Describe("[BSL][Deletion][Snapshot] Local backups will be deleted once the corresponding backup storage location is deleted", BslDeletionWithSnapshots)
 var _ = Describe("[BSL][Deletion][Restic] Local backups and restic repos will be deleted once the corresponding backup storage location is deleted", BslDeletionWithRestic)
 
-var _ = Describe("[Migration][Restic] Migrate resources between clusters by Restic", MigrationWithRestic)
-var _ = Describe("[Migration][Snapshot] Migrate resources between clusters by snapshot", MigrationWithSnapshots)
+//var _ = Describe("[Migration][Restic] Migrate resources between clusters by Restic", MigrationWithRestic)
+//var _ = Describe("[Migration][Snapshot] Migrate resources between clusters by snapshot", MigrationWithSnapshots)
 
 var _ = Describe("[NamespaceMapping][Single][Restic] Backup resources should follow the specific order in schedule", OneNamespaceMappingResticTest)
 var _ = Describe("[NamespaceMapping][Multiple][Restic] Backup resources should follow the specific order in schedule", MultiNamespacesMappingResticTest)

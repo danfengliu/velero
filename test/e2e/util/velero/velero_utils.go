@@ -246,7 +246,7 @@ func checkRestorePhase(ctx context.Context, veleroCLI string, veleroNamespace st
 		arg = []string{"get", "events", "-o", "yaml", "--all-namespaces"}
 		KubectlGetInfo("kubectl", arg)
 		KubectlGetInfo("date", []string{"-u"})
-		time.Sleep(100000000 * time.Minute)
+		//time.Sleep(100000000 * time.Minute)
 	}
 	if restore.Status.Phase != expectedPhase {
 		return errors.Errorf("Unexpected restore phase got %s, expecting %s", restore.Status.Phase, expectedPhase)
