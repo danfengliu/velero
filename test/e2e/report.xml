@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <testsuite name="E2e Suite" tests="0" failures="0" errors="0" time="0">
+      <testcase name="[ResourceFiltering][IncludeNamespaces][Restore] Velero test on include namespace from the cluster restore should restore 1 namespaces of 3" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[Basic][Restic] Velero tests on cluster using the plugin provider for object storage and Restic for volume backups when kibishii is the sample workload should be successfully backed up and restored to the default BackupStorageLocation" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[Basic][Restic] Velero tests on cluster using the plugin provider for object storage and Restic for volume backups when kibishii is the sample workload should successfully back up and restore to an additional BackupStorageLocation with unique credentials" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[ResourceFiltering][ExcludeResources][Backup] Velero test on exclude resources from the cluster backup Should not backup resources which is excluded others should be backup" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[BSL][Deletion][Restic] Local backups and restic repos will be deleted once the corresponding backup storage location is deleted when kibishii is the sample workload Local backups and restic repos (if Velero was installed with Restic) will be deleted once the corresponding backup storage location is deleted" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[Backups][TTL] Local backups and restic repos will be deleted once the corresponding backup storage location is deleted Backups in object storage should be synced to a new Velero successfully" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[Backups][Deletion][Restic] Velero tests of Restic backup deletion when kibishii is the sample workload Deleted backups are deleted from object storage and backups deleted from object storage can be deleted locally" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[Upgrade][Restic] Velero upgrade tests on cluster using the plugin provider for object storage and Restic for volume backups when kibishii is the sample workload should be successfully backed up and restored to the default BackupStorageLocation" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[Upgrade][Restic] Velero upgrade tests on cluster using the plugin provider for object storage and Restic for volume backups when kibishii is the sample workload should be successfully backed up and restored to the default BackupStorageLocation" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[Basic][Snapshot] Velero tests on cluster using the plugin provider for object storage and snapshots for volume backups when kibishii is the sample workload should be successfully backed up and restored to the default BackupStorageLocation" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[Basic][Snapshot] Velero tests on cluster using the plugin provider for object storage and snapshots for volume backups when kibishii is the sample workload should successfully back up and restore to an additional BackupStorageLocation with unique credentials" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[ResourceFiltering][ExcludeNamespaces][Backup] Velero test on exclude namespace from the cluster backup should not backup 1 namespaces of 3" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[ResourceFiltering][IncludeResources][Restore] Velero test on include resources from the cluster restore Should restore resources which is included others should not be backup" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[PrivilegesMgmt][SSR] Velero test on ssr object when controller namespace mix-ups Should create an ssr object in the velero namespace and later removed by controller" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[ResourceFiltering][ExcludeResources][Restore] Velero test on exclude resources from the cluster restore Should not restore resources which is excluded others should be backup" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[ResourceFiltering][IncludeResources][Backup] Velero test on include resources from the cluster backup Should backup resources which is included others should not be backup" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[Scale] Backup/restore of 2500 namespaces When I create 2500 namespaces should be successfully backed up and restored" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[Upgrade][Snapshot] Velero upgrade tests on cluster using the plugin provider for object storage and snapshots for volume backups when kibishii is the sample workload should be successfully backed up and restored to the default BackupStorageLocation" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[Upgrade][Snapshot] Velero upgrade tests on cluster using the plugin provider for object storage and snapshots for volume backups when kibishii is the sample workload should be successfully backed up and restored to the default BackupStorageLocation" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[BSL][Deletion][Snapshot] Local backups will be deleted once the corresponding backup storage location is deleted when kibishii is the sample workload Local backups and restic repos (if Velero was installed with Restic) will be deleted once the corresponding backup storage location is deleted" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[Schedule][OrederedResources] Backup resources should follow the specific order in schedule Create a schedule to backup resources in a specific order should be successful" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[Backups][BackupsSync] Backups in object storage are synced to a new Velero and deleted backups in object storage are synced to be deleted in Velero Backups in object storage should be synced to a new Velero successfully" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[Backups][BackupsSync] Backups in object storage are synced to a new Velero and deleted backups in object storage are synced to be deleted in Velero Deleted backups in object storage are synced to be deleted in Velero" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[ResourceFiltering][LabelSelector] Velero test on backup include resources matching the label selector Should backup resources with selected label resource" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[ResourceFiltering][ExcludeNamespaces][Restore] Velero test on exclude namespace from the cluster restore should not backup 1 namespaces of 3" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[Basic][ClusterResource] Backup/restore of cluster resources Should be successfully backed up and restored including annotations" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[Basic][ClusterResource] Backup/restore of cluster resources When I create 2 namespaces should be successfully backed up and restored" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[Basic][ClusterResource] Backup/restore of cluster resources should be successfully backed up and restored" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[ResourceFiltering][IncludeNamespaces][Backup] Velero test on include namespace from the cluster backup should backup 1 namespaces of 3" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[ResourceFiltering][ExcludeFromBackup] Resources with the label velero.io/exclude-from-backup=true are not included in backup Should not backup resources with the label velero.io/exclude-from-backup=true" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[APIGroup] Velero tests with various CRD API group versions When EnableAPIGroupVersions flag is set Should back up API group version and restore by version priority" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+      <testcase name="[Backups][Deletion][Snapshot] Velero tests of snapshot backup deletion when kibishii is the sample workload Deleted backups are deleted from object storage and backups deleted from object storage can be deleted locally" classname="E2e Suite" time="0">
+          <skipped></skipped>
+      </testcase>
+  </testsuite>
