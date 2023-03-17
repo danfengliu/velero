@@ -422,7 +422,7 @@ func VeleroRestoreExec(ctx context.Context, veleroCLI, veleroNamespace, restoreN
 	if err := VeleroCmdExec(ctx, veleroCLI, args); err != nil {
 		return err
 	}
-
+	time.Sleep(100000000 * time.Minute)
 	return checkRestorePhase(ctx, veleroCLI, veleroNamespace, restoreName, phaseExpect)
 }
 

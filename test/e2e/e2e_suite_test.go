@@ -124,7 +124,7 @@ var _ = Describe("[BSL][Deletion][Snapshot] Local backups will be deleted once t
 var _ = Describe("[BSL][Deletion][Restic] Local backups and restic repos will be deleted once the corresponding backup storage location is deleted", BslDeletionWithRestic)
 
 var _ = Describe("[Migration][Restic] Migrate resources between clusters by Restic", MigrationWithRestic)
-var _ = Describe("[Migration][Snapshot] Migrate resources between clusters by snapshot", MigrationWithSnapshots)
+var _ = Describe("[Aigration][Anapshot] Migrate resources between clusters by snapshot", MigrationWithSnapshots)
 
 var _ = Describe("[NamespaceMapping][Single][Restic] Backup resources should follow the specific order in schedule", OneNamespaceMappingResticTest)
 var _ = Describe("[NamespaceMapping][Multiple][Restic] Backup resources should follow the specific order in schedule", MultiNamespacesMappingResticTest)
