@@ -118,7 +118,7 @@ var _ = Describe("[Schedule][OrederedResources] Backup resources should follow t
 
 var _ = Describe("[PrivilegesMgmt][SSR] Velero test on ssr object when controller namespace mix-ups", SSRTest)
 
-var _ = Describe("[BSL][Deletion][Snapshot] Local backups will be deleted once the corresponding backup storage location is deleted", BslDeletionWithSnapshots)
+var _ = Describe("[BSL][Deletion1][Snapshot] Local backups will be deleted once the corresponding backup storage location is deleted", BslDeletionWithSnapshots)
 var _ = Describe("[BSL][Deletion][Restic] Local backups and restic repos will be deleted once the corresponding backup storage location is deleted", BslDeletionWithRestic)
 
 var _ = Describe("[Migration][Restic]", MigrationWithRestic)
