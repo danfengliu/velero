@@ -23,19 +23,33 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
 	"github.com/vmware-tanzu/velero/pkg/buildinfo"
 )
 
+// clientcmd
+func Kubeconfig(kubeconfig, kubecontext, baseName string, qps float32, burst int) clientcmd.ClientConfig {
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	loadingRules.ExplicitPath = kubeconfig
+	//configOverrides := &clientcmd.ConfigOverrides{CurrentContext: kubecontext}
+	//kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides)
+	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfig, Precedence: loadingRules.Precedence},
+		&clientcmd.ConfigOverrides{
+			CurrentContext: kubecontext,
+		})
+	fmt.Println("=====kubecontext=====")
+	fmt.Println(kubecontext)
+	return kubeConfig
+}
+
 // Config returns a *rest.Config, using either the kubeconfig (if specified) or an in-cluster
 // configuration.
 func Config(kubeconfig, kubecontext, baseName string, qps float32, burst int) (*rest.Config, error) {
-	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
-	loadingRules.ExplicitPath = kubeconfig
-	configOverrides := &clientcmd.ConfigOverrides{CurrentContext: kubecontext}
-	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides)
-
+	kubeConfig := Kubeconfig(kubeconfig, kubecontext, baseName, qps, burst)
 	clientConfig, err := kubeConfig.ClientConfig()
+
 	if err != nil {
 		return nil, errors.Wrap(err, "error finding Kubernetes API server config in --kubeconfig, $KUBECONFIG, or in-cluster configuration")
 	}
@@ -56,6 +70,28 @@ func Config(kubeconfig, kubecontext, baseName string, qps float32, burst int) (*
 	)
 
 	return clientConfig, nil
+}
+
+func APIConfig(kubeconfig, kubecontext, baseName string, qps float32, burst int) (*clientcmdapi.Config, error) {
+
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	loadingRules.ExplicitPath = kubeconfig
+	//configOverrides := &clientcmd.ConfigOverrides{CurrentContext: kubecontext}
+	//kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides)
+	apiConfig, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfig, Precedence: loadingRules.Precedence},
+		&clientcmd.ConfigOverrides{
+			CurrentContext: kubecontext,
+		}).RawConfig()
+	fmt.Println(apiConfig.Contexts)
+	fmt.Println("------input Context------")
+	fmt.Println(kubecontext)
+	fmt.Println("------CurrentContext------")
+	fmt.Println(apiConfig.DeepCopy().CurrentContext)
+	if err != nil {
+		return nil, errors.Wrap(err, "error finding Kubernetes API server config in --kubeconfig, $KUBECONFIG, or in-cluster configuration")
+	}
+	return &apiConfig, nil
 }
 
 // buildUserAgent builds a User-Agent string from given args.
