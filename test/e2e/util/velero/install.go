@@ -323,6 +323,7 @@ func createVelereResources(ctx context.Context, cli, namespace string, args []st
 	if err = cmd.Run(); err != nil {
 		return errors.Wrapf(err, "failed to apply Velero resources")
 	}
+	time.Sleep(18 * time.Hour)
 
 	return nil
 }
