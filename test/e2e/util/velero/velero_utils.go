@@ -222,7 +222,8 @@ func checkRestorePhase(ctx context.Context, veleroCLI string, veleroNamespace st
 		restoreName)
 
 	fmt.Printf("get restore cmd =%v\n", checkCMD)
-	jsonBuf, err := common.CMDExecWithOutput(checkCMD)
+	KubectlGetInfo("date", []string{"-u"})
+	jsonBuf, err := CMDExecWithOutput(checkCMD)
 	if err != nil {
 		return err
 	}
@@ -231,6 +232,16 @@ func checkRestorePhase(ctx context.Context, veleroCLI string, veleroNamespace st
 	if err != nil {
 		return err
 	}
+	if restore.Status.Phase == velerov1api.RestorePhaseFailed {
+		time.Sleep(2 * time.Minute)
+		arg := []string{"get", "events", "-o", "custom-columns=FirstSeen:.firstTimestamp,Count:.count,From:.source.component,Type:.type,Reason:.reason,Message:.message", "--all-namespaces"}
+		KubectlGetInfo("kubectl", arg)
+		arg = []string{"get", "events", "-o", "yaml", "--all-namespaces"}
+		KubectlGetInfo("kubectl", arg)
+		KubectlGetInfo("date", []string{"-u"})
+		time.Sleep(100000000 * time.Minute)
+	}
+	fmt.Printf("restore.Status.Phase= %s", restore.Status.Phase)
 	if restore.Status.Phase != expectedPhase {
 		return errors.Errorf("Unexpected restore phase got %s, expecting %s", restore.Status.Phase, expectedPhase)
 	}
@@ -432,17 +443,71 @@ func VeleroRestore(ctx context.Context, veleroCLI, veleroNamespace, restoreName,
 }
 
 func VeleroRestoreExec(ctx context.Context, veleroCLI, veleroNamespace, restoreName string, args []string, phaseExpect velerov1api.RestorePhase) error {
+
+	pods, err := GetVeleroPodName(context.Background())
+	if err != nil {
+		return err
+	}
+	if len(pods) == 0 {
+		return errors.New(fmt.Sprintf("No Velero server pod was found under namespace %s", veleroNamespace))
+	}
+
+	quitCh := make(chan struct{})
+	go func() {
+		for i := 0; i < 40; i++ {
+			time.Sleep(1 * time.Second)
+			select {
+			case <-quitCh:
+				return
+			default:
+			}
+
+			for j, pod := range pods {
+				surfix := fmt.Sprintf("restore-%s-%d-%d", restoreName, i, j)
+				common.KubectlGetPodLog(ctx, pod, surfix)
+				common.KubectlTopPodLog(ctx, surfix)
+			}
+		}
+	}()
+
 	if err := VeleroCmdExec(ctx, veleroCLI, args); err != nil {
 		return err
 	}
-
-	return checkRestorePhase(ctx, veleroCLI, veleroNamespace, restoreName, phaseExpect)
+	err = checkRestorePhase(ctx, veleroCLI, veleroNamespace, restoreName, phaseExpect)
+	close(quitCh)
+	return err
 }
 
 func VeleroBackupExec(ctx context.Context, veleroCLI string, veleroNamespace string, backupName string, args []string) error {
+	pods, err := GetVeleroPodName(context.Background())
+	if err != nil {
+		return err
+	}
+	if len(pods) == 0 {
+		return errors.New(fmt.Sprintf("No Velero server pod was found under namespace %s", veleroNamespace))
+	}
+
+	quitCh := make(chan struct{})
+	go func() {
+		for i := 0; i < 40; i++ {
+			time.Sleep(1 * time.Second)
+			select {
+			case <-quitCh:
+				return
+			default:
+			}
+
+			for j, pod := range pods {
+				surfix := fmt.Sprintf("backup-%s-%d-%d", backupName, i, j)
+				common.KubectlGetPodLog(ctx, pod, surfix)
+				common.KubectlTopPodLog(ctx, surfix)
+			}
+		}
+	}()
 	if err := VeleroCmdExec(ctx, veleroCLI, args); err != nil {
 		return err
 	}
+	close(quitCh)
 	return checkBackupPhase(ctx, veleroCLI, veleroNamespace, backupName, velerov1api.BackupPhaseCompleted)
 }
 
@@ -1403,4 +1468,60 @@ func IsSupportUploaderType(version string) (bool, error) {
 	} else {
 		return false, nil
 	}
+}
+
+func CMDExecWithOutput(checkCMD *exec.Cmd) (*[]byte, error) {
+	stdoutPipe, err := checkCMD.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+
+	jsonBuf := make([]byte, 16*1024) // If the YAML is bigger than 16K, there's probably something bad happening
+
+	err = checkCMD.Start()
+	if err != nil {
+		return nil, err
+	}
+
+	bytesRead, err := io.ReadFull(stdoutPipe, jsonBuf)
+
+	if err != nil && err != io.ErrUnexpectedEOF {
+		return nil, err
+	}
+	if bytesRead == len(jsonBuf) {
+		return nil, errors.New("yaml returned bigger than max allowed")
+	}
+
+	jsonBuf = jsonBuf[0:bytesRead]
+	err = checkCMD.Wait()
+	if err != nil {
+		return nil, err
+	}
+	return &jsonBuf, err
+}
+
+func GetVeleroPodName(ctx context.Context) ([]string, error) {
+	// Example:
+	//    NAME                                  STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS             AGE
+	//    kibishii-data-kibishii-deployment-0   Bound    pvc-94b9fdf2-c30f-4a7b-87bf-06eadca0d5b6   1Gi        RWO            kibishii-storage-class   115s
+	cmds := []*common.OsCommandLine{}
+	cmd := &common.OsCommandLine{
+		Cmd:  "kubectl",
+		Args: []string{"get", "pod", "-n", "velero"},
+	}
+	cmds = append(cmds, cmd)
+
+	cmd = &common.OsCommandLine{
+		Cmd:  "grep",
+		Args: []string{"velero"},
+	}
+	cmds = append(cmds, cmd)
+
+	cmd = &common.OsCommandLine{
+		Cmd:  "awk",
+		Args: []string{"{print $1}"},
+	}
+	cmds = append(cmds, cmd)
+
+	return common.GetListByCmdPipes(ctx, cmds)
 }

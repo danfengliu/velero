@@ -19,12 +19,14 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	. "github.com/vmware-tanzu/velero/test/e2e"
+	"github.com/vmware-tanzu/velero/test/e2e/util/common"
 	. "github.com/vmware-tanzu/velero/test/e2e/util/k8s"
 	. "github.com/vmware-tanzu/velero/test/e2e/util/kibishii"
 	. "github.com/vmware-tanzu/velero/test/e2e/util/velero"
@@ -126,6 +128,18 @@ func BackupRestoreTest(useVolumeSnapshots bool) {
 				}
 
 				Expect(VeleroInstall(context.Background(), &veleroCfg, false)).To(Succeed())
+				quitCh := make(chan struct{})
+				go func() {
+					for i := 0; i < 80; i++ {
+						time.Sleep(2 * time.Second)
+						select {
+						case <-quitCh:
+							return
+						default:
+						}
+						common.KubectlTopPodLog(context.TODO(), fmt.Sprintf("basic-%d", i))
+					}
+				}()
 			}
 			Expect(VeleroAddPluginsForProvider(context.TODO(), veleroCfg.VeleroCLI, veleroCfg.VeleroNamespace, veleroCfg.AdditionalBSLProvider, veleroCfg.AddBSLPlugins)).To(Succeed())
 
@@ -165,6 +179,7 @@ func BackupRestoreTest(useVolumeSnapshots bool) {
 				}
 				veleroCfg.ProvideSnapshotsVolumeParam = !provideSnapshotVolumesParmInBackup
 				workloadNmespace := kibishiiNamespace + bsl
+
 				Expect(RunKibishiiTests(veleroCfg, backupName, restoreName, bsl, workloadNmespace, useVolumeSnapshots, !useVolumeSnapshots)).To(Succeed(),
 					"Failed to successfully backup and restore Kibishii namespace using BSL %s", bsl)
 			}

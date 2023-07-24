@@ -7,7 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
+
+	veleroexec "github.com/vmware-tanzu/velero/pkg/util/exec"
 )
 
 type OsCommandLine struct {
@@ -86,4 +89,54 @@ func CMDExecWithOutput(checkCMD *exec.Cmd) (*[]byte, error) {
 		return nil, err
 	}
 	return &jsonBuf, err
+}
+
+func KubectlGetPodLog(ctx context.Context, podName, surfix string) error {
+	cmd := exec.CommandContext(ctx, "kubectl",
+		"logs", "-n", "velero", podName)
+	fmt.Printf("Kubectl logs = %v\n", cmd)
+	stdout, stderr, err := veleroexec.RunCommand(cmd)
+	if err != nil {
+		return err
+	}
+	fmt.Print(stderr)
+	err = WriteToFile(stdout, fmt.Sprintf("pod-%s-%s", podName, surfix))
+	fmt.Println(err)
+	return err
+}
+
+func KubectlTopPodLog(ctx context.Context, surfix string) error {
+	cmd := exec.CommandContext(ctx, "kubectl",
+		"top", "pod", "-n", "velero")
+	fmt.Printf("Kubectl logs = %v\n", cmd)
+	stdout, stderr, err := veleroexec.RunCommand(cmd)
+	if err != nil {
+		return err
+	}
+	fmt.Print(stderr)
+	err = WriteToFile(stdout, fmt.Sprintf("top-pod-%s", surfix))
+	fmt.Println(err)
+	return err
+}
+
+func WriteToFile(content, fileName string) error {
+	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		fmt.Println("fail to open file", err)
+		return err
+	}
+	defer file.Close()
+
+	write := bufio.NewWriter(file)
+	_, err = write.WriteString(content)
+	if err != nil {
+		fmt.Println("fail to WriteString file", err)
+		return err
+	}
+	err = write.Flush()
+	if err != nil {
+		fmt.Println("fail to Flush file", err)
+		return err
+	}
+	return nil
 }
