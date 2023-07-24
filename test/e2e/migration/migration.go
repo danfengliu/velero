@@ -70,13 +70,6 @@ func MigrationTest(useVolumeSnapshots bool, veleroCLI2Version VeleroCLI2Version)
 		if veleroCfg.DefaultCluster == "" && veleroCfg.StandbyCluster == "" {
 			Skip("Migration test needs 2 clusters")
 		}
-		// need to uninstall Velero first in case of the affection of the existing global velero installation
-		if veleroCfg.InstallVelero {
-			By("Uninstall Velero", func() {
-				Expect(VeleroUninstall(context.Background(), veleroCfg.VeleroCLI,
-					veleroCfg.VeleroNamespace)).To(Succeed())
-			})
-		}
 	})
 	AfterEach(func() {
 		if !veleroCfg.Debug {
@@ -116,6 +109,13 @@ func MigrationTest(useVolumeSnapshots bool, veleroCLI2Version VeleroCLI2Version)
 					Skip(fmt.Sprintf("Only V1.12 support data mover scenario instead of %s", veleroCLI2Version.VeleroVersion))
 				}
 			}
+
+			// need to uninstall Velero first in case of the affection of the existing global velero installation
+			By("Uninstall Velero", func() {
+				Expect(VeleroUninstall(context.Background(), veleroCfg.VeleroCLI,
+					veleroCfg.VeleroNamespace)).To(Succeed())
+			})
+
 			oneHourTimeout, ctxCancel := context.WithTimeout(context.Background(), time.Minute*60)
 			defer ctxCancel()
 			flag.Parse()

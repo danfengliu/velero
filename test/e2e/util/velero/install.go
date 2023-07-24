@@ -480,6 +480,7 @@ func waitVeleroReady(ctx context.Context, namespace string, useNodeAgent bool) e
 	}
 
 	fmt.Printf("Velero is installed and ready to be tested in the %s namespace! ⛵ \n", namespace)
+
 	return nil
 }
 

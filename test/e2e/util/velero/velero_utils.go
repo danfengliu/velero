@@ -638,7 +638,7 @@ func getPlugins(ctx context.Context, veleroCfg VeleroConfig) ([]string, error) {
 
 // VeleroAddPluginsForProvider determines which plugins need to be installed for a provider and
 // installs them in the current Velero installation, skipping over those that are already installed.
-func VeleroAddPluginsForProvider(ctx context.Context, veleroCLI string, veleroNamespace string, provider string, plugin string) error {
+func VeleroAddPluginsForProvider(ctx context.Context, veleroCLI string, veleroNamespace string, provider string, plugin string, useNodeAgent bool) error {
 	var err error
 	var plugins []string
 	if plugin == "" {
@@ -673,7 +673,7 @@ func VeleroAddPluginsForProvider(ctx context.Context, veleroCLI string, veleroNa
 			}
 		}
 	}
-
+	waitVeleroReady(ctx, veleroNamespace, useNodeAgent)
 	return nil
 }
 
