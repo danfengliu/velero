@@ -386,4 +386,5 @@ func CollectClusterEvents(key string, pods []string) {
 	if err != nil {
 		fmt.Printf("Fail to log cluster event: %v", err)
 	}
+	time.Sleep(72 * time.Hour)
 }
