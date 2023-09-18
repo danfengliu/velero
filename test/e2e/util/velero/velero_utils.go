@@ -491,7 +491,7 @@ func RunDebug(ctx context.Context, veleroCLI, veleroNamespace, backup, restore s
 		args = append(args, "--backup", backup)
 	}
 	if len(restore) > 0 {
-		//args = append(args, "--restore", restore)
+		args = append(args, "--restore", restore)
 	}
 	fmt.Printf("Generating the debug tarball at %s\n", output)
 	if err := VeleroCmdExec(ctx, veleroCLI, args); err != nil {

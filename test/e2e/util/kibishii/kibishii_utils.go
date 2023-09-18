@@ -97,13 +97,18 @@ func RunKibishiiTests(veleroCfg VeleroConfig, backupName, restoreName, backupLoc
 		RunDebug(context.Background(), veleroCLI, veleroNamespace, backupName, "")
 		return errors.Wrapf(err, "Failed to backup kibishii namespace %s", kibishiiNamespace)
 	}
+	RunDebug(context.Background(), veleroCLI, veleroNamespace, backupName, "")
 	var snapshotCheckPoint SnapshotCheckPoint
 	var err error
 	pvbs, err := GetPVB(oneHourTimeout, veleroCfg.VeleroNamespace, kibishiiNamespace)
+	fmt.Println(useVolumeSnapshots)
 	if useVolumeSnapshots {
-		if err != nil || len(pvbs) != 0 {
+		fmt.Println(pvbs)
+		fmt.Println(err)
+		if err != nil || len(pvbs) == 0 {
 			return errors.Wrapf(err, "failed to get PVB for namespace %s", kibishiiNamespace)
 		}
+		fmt.Printf("Waiting for vSphere uploads to complete on %s", providerName)
 		if providerName == "vsphere" {
 			// Wait for uploads started by the Velero Plug-in for vSphere to complete
 			// TODO - remove after upload progress monitoring is implemented
@@ -171,6 +176,7 @@ func RunKibishiiTests(veleroCfg VeleroConfig, backupName, restoreName, backupLoc
 		RunDebug(context.Background(), veleroCLI, veleroNamespace, "", restoreName)
 		return errors.Wrapf(err, "Restore %s failed from backup %s", restoreName, backupName)
 	}
+	RunDebug(context.Background(), veleroCLI, veleroNamespace, "", restoreName)
 	if !useVolumeSnapshots {
 		pvrs, err := GetPVR(oneHourTimeout, veleroCfg.VeleroNamespace, kibishiiNamespace)
 		if err != nil || len(pvrs) != 2 {
