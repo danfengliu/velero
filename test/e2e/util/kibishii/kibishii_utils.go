@@ -97,6 +97,7 @@ func RunKibishiiTests(veleroCfg VeleroConfig, backupName, restoreName, backupLoc
 		RunDebug(context.Background(), veleroCLI, veleroNamespace, backupName, "")
 		return errors.Wrapf(err, "Failed to backup kibishii namespace %s", kibishiiNamespace)
 	}
+	RunDebug(context.Background(), veleroCLI, veleroNamespace, backupName, "")
 	var snapshotCheckPoint SnapshotCheckPoint
 	var err error
 	pvbs, err := GetPVB(oneHourTimeout, veleroCfg.VeleroNamespace, kibishiiNamespace)
@@ -171,6 +172,7 @@ func RunKibishiiTests(veleroCfg VeleroConfig, backupName, restoreName, backupLoc
 		RunDebug(context.Background(), veleroCLI, veleroNamespace, "", restoreName)
 		return errors.Wrapf(err, "Restore %s failed from backup %s", restoreName, backupName)
 	}
+	RunDebug(context.Background(), veleroCLI, veleroNamespace, "", restoreName)
 	if !useVolumeSnapshots {
 		pvrs, err := GetPVR(oneHourTimeout, veleroCfg.VeleroNamespace, kibishiiNamespace)
 		if err != nil || len(pvrs) != 2 {

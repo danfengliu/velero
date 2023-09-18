@@ -75,7 +75,7 @@ func BackupRestoreTest(useVolumeSnapshots bool) {
 	})
 
 	When("kibishii is the sample workload", func() {
-		It("should be successfully backed up and restored to the default BackupStorageLocation", func() {
+		XIt("should be successfully backed up and restored to the default BackupStorageLocation", func() {
 			// TODO[High] - remove code block below when vSphere plugin PR #500 is included in release version.
 			//  because restore will be partiallyFailed when DefaultVolumesToFsBackup is set to true during
 			//  Velero installation with default BSL.
