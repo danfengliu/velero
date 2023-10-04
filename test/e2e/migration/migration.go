@@ -256,7 +256,7 @@ func MigrationTest(useVolumeSnapshots bool, veleroCLI2Version VeleroCLI2Version)
 					//TODO: checkpoint for datamover
 				}
 			}
-
+			time.Sleep(24 * time.Hour)
 			if useVolumeSnapshots && veleroCfg.CloudProvider == "azure" &&
 				strings.EqualFold(veleroCfg.Features, "EnableCSI") &&
 				!OriginVeleroCfg.SnapshotMoveData {

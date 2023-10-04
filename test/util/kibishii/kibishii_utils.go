@@ -183,6 +183,7 @@ func RunKibishiiTests(veleroCfg VeleroConfig, backupName, restoreName, backupLoc
 		RunDebug(context.Background(), veleroCLI, veleroNamespace, "", restoreName)
 		return errors.Wrapf(err, "Restore %s failed from backup %s", restoreName, backupName)
 	}
+	time.Sleep(24 * time.Hour)
 	if !useVolumeSnapshots && providerName != "vsphere" {
 		pvrs, err := GetPVR(oneHourTimeout, veleroCfg.VeleroNamespace, kibishiiNamespace)
 		if err != nil {
