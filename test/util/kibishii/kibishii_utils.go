@@ -90,7 +90,7 @@ func RunKibishiiTests(veleroCfg VeleroConfig, backupName, restoreName, backupLoc
 		return errors.Wrapf(err, "Failed to install and prepare data for kibishii %s", kibishiiNamespace)
 	}
 	fmt.Printf("KibishiiPrepareBeforeBackup done %s\n", time.Now().Format("2006-01-02 15:04:05"))
-
+	time.Sleep(500 * time.Hour)
 	var BackupCfg BackupConfig
 	BackupCfg.BackupName = backupName
 	BackupCfg.Namespace = kibishiiNamespace

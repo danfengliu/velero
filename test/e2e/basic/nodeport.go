@@ -12,7 +12,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	velerov1api "github.com/vmware-tanzu/velero/pkg/apis/velero/v1"
-
 	. "github.com/vmware-tanzu/velero/test"
 	. "github.com/vmware-tanzu/velero/test/e2e/test"
 	. "github.com/vmware-tanzu/velero/test/util/k8s"
@@ -80,6 +79,7 @@ func (n *NodePort) CreateResources() error {
 			Expect(err).To(Succeed(), "fail to get service")
 		})
 	}
+	time.Sleep(500 * time.Hour)
 	return nil
 }
 

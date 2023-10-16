@@ -9,7 +9,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	velerov1api "github.com/vmware-tanzu/velero/pkg/apis/velero/v1"
-
 	. "github.com/vmware-tanzu/velero/test"
 	. "github.com/vmware-tanzu/velero/test/e2e/test"
 	. "github.com/vmware-tanzu/velero/test/util/k8s"
@@ -71,6 +70,7 @@ func (s *StorageClasssChanging) Init() error {
 	return nil
 }
 func (s *StorageClasssChanging) CreateResources() error {
+	time.Sleep(500 * time.Hour)
 	label := map[string]string{
 		"app": "test",
 	}
