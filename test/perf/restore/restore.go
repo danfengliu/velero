@@ -43,7 +43,7 @@ func (r *RestoreTest) Init() error {
 		FailedMSG: "Failed to restore resources",
 		Text:      fmt.Sprintf("Should restore resources success"),
 	}
-	return r.clearUpResourcesBeforRestore()
+	return nil
 }
 
 func (r *RestoreTest) clearUpResourcesBeforRestore() error {

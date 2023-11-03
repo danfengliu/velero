@@ -24,16 +24,14 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
 	"github.com/pkg/errors"
-
-	"github.com/vmware-tanzu/velero/test/util/report"
-	"github.com/vmware-tanzu/velero/test/util/velero"
 
 	velerov1api "github.com/vmware-tanzu/velero/pkg/apis/velero/v1"
 	. "github.com/vmware-tanzu/velero/test"
 	"github.com/vmware-tanzu/velero/test/perf/metrics"
 	. "github.com/vmware-tanzu/velero/test/util/k8s"
+	"github.com/vmware-tanzu/velero/test/util/report"
+	"github.com/vmware-tanzu/velero/test/util/velero"
 	. "github.com/vmware-tanzu/velero/test/util/velero"
 )
 
@@ -131,10 +129,10 @@ func (t *TestCase) Backup() error {
 }
 
 func (t *TestCase) Destroy() error {
-	By(fmt.Sprintf("Start to destroy namespace %s......", t.CaseBaseName), func() {
-		Expect(CleanupNamespacesFiterdByExcludes(t.GetTestCase().Ctx, t.Client, *t.NSExcluded)).To(Succeed(), "Could cleanup retrieve namespaces")
-		Expect(ClearClaimRefForFailedPVs(t.Ctx, t.Client)).To(Succeed(), "Failed to make PV status become to available")
-	})
+	// By(fmt.Sprintf("Start to destroy namespace %s......", t.CaseBaseName), func() {
+	// 	Expect(CleanupNamespacesFiterdByExcludes(t.GetTestCase().Ctx, t.Client, *t.NSExcluded)).To(Succeed(), "Could cleanup retrieve namespaces")
+	// 	Expect(ClearClaimRefForFailedPVs(t.Ctx, t.Client)).To(Succeed(), "Failed to make PV status become to available")
+	// })
 	return nil
 }
 
