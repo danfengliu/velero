@@ -181,6 +181,10 @@ func runBackupDeletionTests(client TestClient, veleroCfg VeleroConfig, backupNam
 	backupName = "backup-1-" + UUIDgen.String()
 	BackupCfg.BackupName = backupName
 
+	// Hit issue: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/errors-overview.html#:~:text=SnapshotCreationPerVolumeRateExceeded
+	// Sleep for more than 15 seconds to avoid this issue.
+	time.Sleep(1 * time.Minute)
+
 	By(fmt.Sprintf("Back up workload with name %s", BackupCfg.BackupName), func() {
 		Expect(VeleroBackupNamespace(oneHourTimeout, veleroCLI,
 			veleroNamespace, BackupCfg)).To(Succeed(), func() string {
