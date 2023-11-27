@@ -25,16 +25,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/config"
-	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
+	"github.com/aws/aws-sdk-go-v2/config"
 	s3manager "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 
@@ -317,12 +314,6 @@ func (s AWSStorage) IsSnapshotExisted(cloudCredentialsFile, bslConfig, backupObj
 	ec2Client := ec2.NewFromConfig(cfg)
 	input := &ec2.DescribeSnapshotsInput{
 		OwnerIds: []string{"self"},
-		Filters: []ec2types.Filter{
-			{
-				Name:   aws.String("tag:velero.io/backup"),
-				Values: []string{backupObject},
-			},
-		},
 	}
 
 	result, err := ec2Client.DescribeSnapshots(context.Background(), input)
@@ -330,21 +321,26 @@ func (s AWSStorage) IsSnapshotExisted(cloudCredentialsFile, bslConfig, backupObj
 		fmt.Println(err)
 	}
 
-	for _, n := range result.Snapshots {
-		fmt.Println(n.SnapshotId)
-		if n.SnapshotId != nil {
-			fmt.Println(*n.SnapshotId)
-		}
-		fmt.Println(n.Tags)
-		fmt.Println(n.VolumeId)
-		if n.VolumeId != nil {
-			fmt.Println(*n.VolumeId)
+	var actualCount int
+	for _, snapshotId := range snapshotCheck.SnapshotIDList {
+		for _, n := range result.Snapshots {
+			fmt.Println(n.SnapshotId)
+			if n.SnapshotId != nil && (*n.SnapshotId == snapshotId) {
+				actualCount++
+				fmt.Println(*n.SnapshotId)
+				fmt.Println(n.Tags)
+				fmt.Println(n.VolumeId)
+				if n.VolumeId != nil {
+					fmt.Println(*n.VolumeId)
+				}
+			}
+
 		}
 	}
-	if len(result.Snapshots) != snapshotCheck.ExpectCount {
+	if actualCount != snapshotCheck.ExpectCount {
 		return errors.New(fmt.Sprintf("Snapshot count is not as expected %d", snapshotCheck.ExpectCount))
 	} else {
-		fmt.Printf("Snapshot count %d is as expected %d\n", len(result.Snapshots), snapshotCheck.ExpectCount)
+		fmt.Printf("Snapshot count %d is as expected %d\n", actualCount, snapshotCheck.ExpectCount)
 		return nil
 	}
 }
