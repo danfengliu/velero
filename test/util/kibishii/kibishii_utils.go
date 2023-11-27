@@ -151,7 +151,7 @@ func RunKibishiiTests(veleroCfg VeleroConfig, backupName, restoreName, backupLoc
 		} else {
 			// wait for a period to confirm no snapshots exist for the backup
 			time.Sleep(5 * time.Minute)
-			if strings.EqualFold(veleroFeatures, "EnableCSI") {
+			if strings.EqualFold(veleroFeatures, FeatureCSI) {
 				_, err = GetSnapshotCheckPoint(*veleroCfg.ClientToInstallVelero, veleroCfg, 0,
 					kibishiiNamespace, backupName, KibishiiPVCNameList)
 				if err != nil {
@@ -214,10 +214,10 @@ func RunKibishiiTests(veleroCfg VeleroConfig, backupName, restoreName, backupLoc
 	// the snapshots of AWS may be still in pending status when do the restore, wait for a while
 	// to avoid this https://github.com/vmware-tanzu/velero/issues/1799
 	// TODO remove this after https://github.com/vmware-tanzu/velero/issues/3533 is fixed
-	if useVolumeSnapshots {
-		fmt.Println("Waiting 5 minutes to make sure the snapshots are ready...")
-		time.Sleep(5 * time.Minute)
-	}
+	// if useVolumeSnapshots {
+	// 	fmt.Println("Waiting 5 minutes to make sure the snapshots are ready...")
+	// 	time.Sleep(5 * time.Minute)
+	// }
 
 	fmt.Printf("VeleroRestore %s\n", time.Now().Format("2006-01-02 15:04:05"))
 	if err := VeleroRestore(oneHourTimeout, veleroCLI, veleroNamespace, restoreName, backupName, ""); err != nil {
@@ -245,11 +245,11 @@ func RunKibishiiTests(veleroCfg VeleroConfig, backupName, restoreName, backupLoc
 func installKibishii(ctx context.Context, namespace string, cloudPlatform, veleroFeatures,
 	kibishiiDirectory string, useVolumeSnapshots bool, workerReplicas int) error {
 	if strings.EqualFold(cloudPlatform, "azure") &&
-		strings.EqualFold(veleroFeatures, "EnableCSI") {
+		strings.EqualFold(veleroFeatures, FeatureCSI) {
 		cloudPlatform = "azure-csi"
 	}
 	if strings.EqualFold(cloudPlatform, "aws") &&
-		strings.EqualFold(veleroFeatures, "EnableCSI") {
+		strings.EqualFold(veleroFeatures, FeatureCSI) {
 		cloudPlatform = "aws-csi"
 	}
 	// We use kustomize to generate YAML for Kibishii from the checked-in yaml directories
