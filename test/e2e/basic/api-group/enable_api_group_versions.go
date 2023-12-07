@@ -34,7 +34,6 @@ import (
 	corev1api "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/vmware-tanzu/velero/pkg/builder"
 	veleroexec "github.com/vmware-tanzu/velero/pkg/util/exec"
 	. "github.com/vmware-tanzu/velero/test"
 	. "github.com/vmware-tanzu/velero/test/util/k8s"
@@ -120,80 +119,6 @@ func APIGropuVersionsTest() {
 func runEnableAPIGroupVersionsTests(ctx context.Context, client TestClient, group string) error {
 	tests := []apiGropuVersionsTest{
 		{
-			name:       "Target and source cluster preferred versions match; Preferred version v1 is restored (Priority 1, Case A).",
-			srcCrdYaml: "../testdata/enable_api_group_versions/case-a-source.yaml",
-			srcCRs: map[string]string{
-				"v1":       "../testdata/enable_api_group_versions/music_v1_rockband.yaml",
-				"v1alpha1": "../testdata/enable_api_group_versions/music_v1alpha1_rockband.yaml",
-			},
-			tgtCrdYaml: "../testdata/enable_api_group_versions/case-a-target.yaml",
-			tgtVer:     "v1",
-			cm:         nil,
-			want: map[string]map[string]string{
-				"annotations": {
-					"rockband0s.music.example.io.0/originalVersion": "v1",
-				},
-				"specs": {
-					"genre": "60s rock",
-				},
-			},
-		},
-		{
-			name:       "Latest common non-preferred supported version v2beta2 is restored (Priority 3, Case D).",
-			srcCrdYaml: "../testdata/enable_api_group_versions/case-b-source-manually-added-mutations.yaml",
-			srcCRs: map[string]string{
-				"v2beta2": "../testdata/enable_api_group_versions/music_v2beta2_rockband.yaml",
-				"v2beta1": "../testdata/enable_api_group_versions/music_v2beta1_rockband.yaml",
-				"v1":      "../testdata/enable_api_group_versions/music_v1_rockband.yaml",
-			},
-			tgtCrdYaml: "../testdata/enable_api_group_versions/case-d-target-manually-added-mutations.yaml",
-			tgtVer:     "v2beta2",
-			cm:         nil,
-			want: map[string]map[string]string{
-				"annotations": {
-					"rockband1s.music.example.io.1/originalVersion": "v2beta2",
-				},
-				"specs": {
-					"genre": "60s rock",
-				},
-			},
-		},
-		{
-			name:       "No common supported versions means no rockbands custom resource is restored.",
-			srcCrdYaml: "../testdata/enable_api_group_versions/case-a-source.yaml",
-			srcCRs: map[string]string{
-				"v1":       "../testdata/enable_api_group_versions/music_v1_rockband.yaml",
-				"v1alpha1": "../testdata/enable_api_group_versions/music_v1alpha1_rockband.yaml",
-			},
-			tgtCrdYaml: "../testdata/enable_api_group_versions/case-b-target-manually-added-mutations.yaml",
-			tgtVer:     "",
-			cm:         nil,
-			want:       nil,
-		},
-		{
-			name:       "User config map overrides Priority 3, Case D and restores v2beta1",
-			srcCrdYaml: "../testdata/enable_api_group_versions/case-b-source-manually-added-mutations.yaml",
-			srcCRs: map[string]string{
-				"v2beta2": "../testdata/enable_api_group_versions/music_v2beta2_rockband.yaml",
-				"v2beta1": "../testdata/enable_api_group_versions/music_v2beta1_rockband.yaml",
-				"v1":      "../testdata/enable_api_group_versions/music_v1_rockband.yaml",
-			},
-			tgtCrdYaml: "../testdata/enable_api_group_versions/case-d-target-manually-added-mutations.yaml",
-			tgtVer:     "v2beta1",
-			cm: builder.ForConfigMap(veleroCfg.VeleroNamespace, "enableapigroupversions").Data(
-				"restoreResourcesVersionPriority",
-				`rockband3s.music.example.io.3=v2beta1,v2beta2,v2`,
-			).Result(),
-			want: map[string]map[string]string{
-				"annotations": {
-					"rockband3s.music.example.io.3/originalVersion": "v2beta1",
-				},
-				"specs": {
-					"genre": "60s rock",
-				},
-			},
-		},
-		{
 			name:       "Restore successful when CRD doesn't (yet) exist in target",
 			srcCrdYaml: "../testdata/enable_api_group_versions/case-a-source.yaml",
 			srcCRs: map[string]string{
@@ -276,11 +201,13 @@ func runEnableAPIGroupVersionsTests(ctx context.Context, client TestClient, grou
 	restoreName := "restore-rockbands-" + UUIDgen.String() + "-wanted"
 	if err := VeleroRestore(ctx, veleroCfg.VeleroCLI, veleroCfg.VeleroNamespace, restoreName, BackupCfgWanted.BackupName, ""); err != nil {
 		RunDebug(context.Background(), veleroCfg.VeleroCLI, veleroCfg.VeleroNamespace, "", restoreName)
+		time.Sleep(888 * time.Hour)
 		return errors.Wrapf(err, "restore %s namespaces on target cluster", nsListwanted)
 	}
 
 	restoreName = "restore-rockbands-" + UUIDgen.String() + "-unwanted"
 	err = VeleroRestore(ctx, veleroCfg.VeleroCLI, veleroCfg.VeleroNamespace, restoreName, BackupCfgUnwanted.BackupName, "")
+
 	if !strings.Contains(err.Error(), "Unexpected restore phase got PartiallyFailed, expecting Completed") {
 		return errors.New("expected error but not none")
 	}

@@ -143,6 +143,7 @@ func VeleroInstall(ctx context.Context, veleroCfg *VeleroConfig, isStandbyCluste
 		return errors.WithMessagef(err, "Failed to install Velero in the cluster")
 	}
 	fmt.Printf("Finish velero install %s\n", time.Now().Format("2006-01-02 15:04:05"))
+
 	return nil
 }
 
