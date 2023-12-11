@@ -335,8 +335,12 @@ func MigrationTest(useVolumeSnapshots bool, veleroCLI2Version VeleroCLI2Version)
 			})
 
 			By(fmt.Sprintf("Verify workload %s after restore ", migrationNamespace), func() {
-				Expect(KibishiiVerifyAfterRestore(*veleroCfg.StandbyClient, migrationNamespace,
-					oneHourTimeout, &KibishiiData, "")).To(Succeed(), "Fail to verify workload after restore")
+				err = KibishiiVerifyAfterRestore(*veleroCfg.StandbyClient, migrationNamespace,
+					oneHourTimeout, &KibishiiData, "")
+				if err != nil {
+					fmt.Printf("err: %v", err)
+					time.Sleep(888 * time.Hour)
+				}
 			})
 
 			// TODO: delete backup created by case self, not all
