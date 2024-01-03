@@ -26,7 +26,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
 	"github.com/pkg/errors"
 
 	velerov1api "github.com/vmware-tanzu/velero/pkg/apis/velero/v1"
@@ -187,8 +186,10 @@ func (t *TestCase) Verify() error {
 
 func (t *TestCase) Clean() error {
 	veleroCfg := t.GetTestCase().VeleroCfg
+
 	if !veleroCfg.Debug {
 		By(fmt.Sprintf("Clean namespace with prefix %s after test", t.CaseBaseName), func() {
+			time.Sleep(100 * time.Hour)
 			CleanupNamespaces(t.Ctx, t.Client, t.CaseBaseName)
 		})
 		By("Clean backups after test", func() {
