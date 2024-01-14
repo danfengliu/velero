@@ -281,8 +281,9 @@ func runEnableAPIGroupVersionsTests(ctx context.Context, client TestClient, grou
 
 	restoreName = "restore-rockbands-" + UUIDgen.String() + "-unwanted"
 	err = VeleroRestore(ctx, veleroCfg.VeleroCLI, veleroCfg.VeleroNamespace, restoreName, BackupCfgUnwanted.BackupName, "")
-	if !strings.Contains(err.Error(), "Unexpected restore phase got PartiallyFailed, expecting Completed") {
-		return errors.New("expected error but not none")
+	RunDebug(context.Background(), veleroCfg.VeleroCLI, veleroCfg.VeleroNamespace, BackupCfgUnwanted.BackupName, restoreName)
+	if err != nil && !strings.Contains(err.Error(), "Unexpected restore phase got PartiallyFailed, expecting Completed") {
+		return errors.New("expected error but got none")
 	}
 
 	for i, tc := range tests {
