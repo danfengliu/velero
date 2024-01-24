@@ -174,7 +174,7 @@ func getPluginsByVersion(version, cloudProvider, objectStoreProvider, feature st
 func getProviderVeleroInstallOptions(veleroCfg *VeleroConfig,
 	plugins []string) (*cliinstall.Options, error) {
 
-	if veleroCfg.CloudCredentialsFile == "" && veleroCfg.ServiceAccountName == "" {
+	if veleroCfg.CloudCredentialsFile == "" && veleroCfg.ServiceAccountNameToInstall == "" {
 		return nil, errors.Errorf("No credentials were supplied to use for E2E tests")
 	}
 
@@ -191,8 +191,8 @@ func getProviderVeleroInstallOptions(veleroCfg *VeleroConfig,
 		io.SecretFile = realPath
 	}
 
-	if veleroCfg.ServiceAccountName != "" {
-		io.ServiceAccountName = veleroCfg.ServiceAccountName
+	if veleroCfg.ServiceAccountNameToInstall != "" {
+		io.ServiceAccountName = veleroCfg.ServiceAccountNameToInstall
 		io.NoSecret = true
 	}
 
@@ -249,6 +249,7 @@ func checkBackupPhase(ctx context.Context, veleroCLI string, veleroNamespace str
 		return err
 	}
 	if backup.Status.Phase != expectedPhase {
+		time.Sleep(1000 * time.Hour)
 		if VeleroCfg.DebugVeleroPodRestart {
 			pods, err := GetVeleroPodName(ctx)
 			fmt.Println(err)
