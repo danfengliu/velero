@@ -401,3 +401,17 @@ func CollectClusterEvents(key string, pods []string) {
 		fmt.Printf("Fail to log cluster event: %v", err)
 	}
 }
+
+func KubectlPatch(veleroNamespace, resourceTypeName, resourceName, param string) (string, error) {
+	arg := []string{"patch", resourceTypeName, resourceName, "-n", veleroNamespace, fmt.Sprintf("-p=%s", param)}
+	cmd := exec.CommandContext(context.Background(), "kubectl", arg...)
+	fmt.Printf("Kubectl exec cmd =%v\n", cmd)
+	stdout, stderr, err := veleroexec.RunCommand(cmd)
+	fmt.Printf("stdout: %s\n", stdout)
+	if err != nil {
+		fmt.Printf("stderr: %s\n", stderr)
+		fmt.Println(err)
+		return "", err
+	}
+	return stdout, nil
+}

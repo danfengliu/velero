@@ -151,7 +151,12 @@ func VeleroInstall(ctx context.Context, veleroCfg *VeleroConfig, isStandbyCluste
 		VeleroServerDebugMode:            veleroCfg.VeleroServerDebugMode,
 		WithoutDisableInformerCacheParam: veleroCfg.WithoutDisableInformerCacheParam,
 	})
-
+	if veleroCfg.CloudProvider == "kind" {
+		_, err = KubectlPatch(veleroCfg.VeleroNamespace, "ds", "node-agent", "{\"spec\": {\"template\": {\"spec\":  {\"volumes\": [{\"hostPath\": {\"path\": \"/opt/rke/var/lib/kubelet/pods\",\"type\": \"\"},\"name\": \"host-pods\"}]}}}}")
+		if err != nil {
+			return errors.WithMessagef(err, "Failed to patch node-agent")
+		}
+	}
 	if err != nil {
 		RunDebug(context.Background(), veleroCfg.VeleroCLI, veleroCfg.VeleroNamespace, "", "")
 		return errors.WithMessagef(err, "Failed to install Velero in the cluster")
