@@ -262,6 +262,7 @@ func checkBackupPhase(ctx context.Context, veleroCLI string, veleroNamespace str
 			pods, err := GetVeleroPodName(ctx)
 			fmt.Println(err)
 			CollectClusterEvents(backupName, pods)
+			time.Sleep(888 * time.Hour)
 		}
 		return errors.Errorf("Unexpected backup phase got %s, expecting %s", backup.Status.Phase, expectedPhase)
 	}
