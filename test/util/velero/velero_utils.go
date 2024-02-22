@@ -215,6 +215,7 @@ func checkBackupPhase(ctx context.Context, veleroCLI string, veleroNamespace str
 		return err
 	}
 	if backup.Status.Phase != expectedPhase {
+		time.Sleep(88 * time.Hour)
 		if VeleroCfg.DebugVeleroPodRestart {
 			pods, err := GetVeleroPodName(ctx)
 			fmt.Println(err)
