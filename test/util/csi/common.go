@@ -52,7 +52,7 @@ func GetClients() (*kubernetes.Clientset, *snapshotterClientSet.Clientset, error
 	return client, snapshotterClient, nil
 }
 
-func GetCsiSnapshotHandle(client TestClient, backupName string) ([]string, error) {
+func GetCsiSnapshotHandle(client TestClient, key string) ([]string, error) {
 	_, snapshotClient, err := GetClients()
 	if err != nil {
 		return nil, err
@@ -78,18 +78,18 @@ func GetCsiSnapshotHandle(client TestClient, backupName string) ([]string, error
 			continue
 		}
 
-		if i.Labels["velero.io/backup-name"] == backupName {
+		if i.Labels["velero.io/backup-name"] == key || i.Spec.VolumeSnapshotRef.Namespace == key {
 			tmp := strings.Split(*i.Status.SnapshotHandle, "/")
 			snapshotHandleList = append(snapshotHandleList, tmp[len(tmp)-1])
 		}
 	}
 
 	if len(snapshotHandleList) == 0 {
-		fmt.Printf("No VolumeSnapshotContent from backup %s\n", backupName)
+		fmt.Printf("No VolumeSnapshotContent from backup %s\n", key)
 	}
 	return snapshotHandleList, nil
 }
-func GetCsiSnapshotHandleV1(client TestClient, backupName string) ([]string, error) {
+func GetCsiSnapshotHandleV1(client TestClient, key string) ([]string, error) {
 	_, snapshotClient, err := GetClients()
 	if err != nil {
 		return nil, err
@@ -102,27 +102,23 @@ func GetCsiSnapshotHandleV1(client TestClient, backupName string) ([]string, err
 	var snapshotHandleList []string
 	for _, i := range vscList.Items {
 		if i.Status == nil {
-			fmt.Println("SnapshotHandle Status s nil")
+			fmt.Printf("VolumeSnapshotContent status is nil\n")
 			continue
 		}
 		if i.Status.SnapshotHandle == nil {
-			fmt.Println("SnapshotHandle is nil")
+			fmt.Printf("SnapshotHandle is nil\n")
 			continue
 		}
-
-		if i.Labels == nil {
-			fmt.Println("VolumeSnapshotContents label is nil")
-			continue
-		}
-
-		if i.Labels["velero.io/backup-name"] == backupName {
+		if (i.Labels != nil && i.Labels["velero.io/backup-name"] == key) || i.Spec.VolumeSnapshotRef.Namespace == key {
 			tmp := strings.Split(*i.Status.SnapshotHandle, "/")
 			snapshotHandleList = append(snapshotHandleList, tmp[len(tmp)-1])
 		}
 	}
 
 	if len(snapshotHandleList) == 0 {
-		fmt.Printf("No VolumeSnapshotContent from backup %s\n", backupName)
+		fmt.Printf("No VolumeSnapshotContent from key %s\n", key)
+	} else {
+		fmt.Printf("Volume snapshot content list: %v\n", snapshotHandleList)
 	}
 	return snapshotHandleList, nil
 }
@@ -164,22 +160,34 @@ func GetVolumeSnapshotContentNameByPod(client TestClient, podName, namespace, ba
 	return "", errors.New(fmt.Sprintf("Fail to get VolumeSnapshotContentName for pod %s under namespace %s", podName, namespace))
 }
 
-func CheckVolumeSnapshotCR(client TestClient, backupName string, expectedCount int, apiVersion string) ([]string, error) {
+func CheckVolumeSnapshotCR(client TestClient, backupName string, expectedCount int) ([]string, error) {
 	var err error
 	var snapshotContentNameList []string
-	if apiVersion == "v1beta1" {
+
+	resourceName := "snapshot.storage.k8s.io"
+
+	apiVersion, err := GetAPIVersions(&client, resourceName)
+	if err != nil {
+		return nil, err
+	}
+	if len(apiVersion) == 0 {
+		return nil, errors.New("Fail to get APIVersion")
+	}
+	if apiVersion[0] == "v1beta1" {
 		if snapshotContentNameList, err = GetCsiSnapshotHandle(client, backupName); err != nil {
 			return nil, errors.Wrap(err, "Fail to get Azure CSI snapshot content")
 		}
-	} else if apiVersion == "v1" {
+	} else if apiVersion[0] == "v1" {
 		if snapshotContentNameList, err = GetCsiSnapshotHandleV1(client, backupName); err != nil {
 			return nil, errors.Wrap(err, "Fail to get Azure CSI snapshot content")
 		}
 	} else {
 		return nil, errors.New("API version is invalid")
 	}
-	if len(snapshotContentNameList) != expectedCount {
-		return nil, errors.New(fmt.Sprintf("Snapshot content count %d is not as expect %d", len(snapshotContentNameList), expectedCount))
+	if expectedCount >= 0 {
+		if len(snapshotContentNameList) != expectedCount {
+			return nil, errors.New(fmt.Sprintf("Snapshot content count %d is not as expect %d", len(snapshotContentNameList), expectedCount))
+		}
 	}
 	fmt.Printf("snapshotContentNameList: %v \n", snapshotContentNameList)
 	return snapshotContentNameList, nil

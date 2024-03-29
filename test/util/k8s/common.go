@@ -244,7 +244,6 @@ func GetAPIVersions(client *TestClient, name string) ([]string, error) {
 		return nil, errors.Wrap(err, "Fail to get server API groups")
 	}
 	for _, group := range APIGroup.Groups {
-		fmt.Println(group.Name)
 		if group.Name == name {
 			for _, v := range group.Versions {
 				fmt.Println(v.Version)
@@ -253,7 +252,7 @@ func GetAPIVersions(client *TestClient, name string) ([]string, error) {
 			return version, nil
 		}
 	}
-	return nil, errors.New("Server API groups is empty")
+	return nil, errors.New("Fail to get server API groups")
 }
 
 func GetPVByPVCName(client TestClient, namespace, pvcName string) (string, error) {
